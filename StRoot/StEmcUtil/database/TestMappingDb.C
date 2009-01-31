@@ -13,19 +13,18 @@ TestMappingDb(bool useMaker=false, bool useJprof=true) {
     TStopwatch timer;
     
     StEmcMappingDb mapping;
-    if(useMaker) mapping.Init();
+    //if(useMaker) mapping.Init();
     mapping.bemc(1);
     mapping.bsmde(1);
     
     cerr << "init: " << timer.CpuTime() << '\t' << timer.RealTime() << endl;
     timer.Start();
     
-    for(int counter = 0; counter < 1; ++counter) {
+    for(int counter = 0; counter < 5; ++counter) {
         for(int id=1; id<=4800; ++id) {
             int id2 = mapping.softIdFromDaqId(kBarrelEmcTowerId, 
                 mapping.bemc(id).daqID);
-            cerr << id << '\t' << mapping.bemc(id).daqID << '\t' << id2 << endl;
-            // assert(id == id2);
+            assert(id == id2);
         }
         
         for(int id=1; id<=18000; ++id) {
@@ -35,6 +34,6 @@ TestMappingDb(bool useMaker=false, bool useJprof=true) {
         }
     }
     
-    cerr << "tot: " << timer.CpuTime() << '\t' << timer.RealTime() << endl;
+    cerr << "loop: " << timer.CpuTime() << '\t' << timer.RealTime() << endl;
     return 0;
 }

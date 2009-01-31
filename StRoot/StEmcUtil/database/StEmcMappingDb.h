@@ -41,8 +41,6 @@ public:
     StEmcMappingDb(int date=20330101, int time=0);
     virtual ~StEmcMappingDb();
     
-    void Init();
-    
     /// St_db_Maker-compatible interface
     void SetDateTime(int date, int time);
     void SetFlavor(const char *flavor, const char *tablename=NULL);
@@ -72,16 +70,10 @@ public:
 
 private:
     // DB tables provided by St_db_Maker -- prefer to use these
-    St_bemcMap      *mBemcTTable;
-    St_bprsMap      *mBprsTTable;
-    St_bsmdeMap     *mSmdeTTable;
-    St_bsmdpMap     *mSmdpTTable;
-    
-    // version info from StMaker::GetValidity -- used to expire caches
-    mutable Int_t   mBemcValidity;
-    mutable Int_t   mBprsValidity;
-    mutable Int_t   mSmdeValidity;
-    mutable Int_t   mSmdpValidity;
+    mutable St_bemcMap      *mBemcTTable;
+    mutable St_bprsMap      *mBprsTTable;
+    mutable St_bsmdeMap     *mSmdeTTable;
+    mutable St_bsmdpMap     *mSmdpTTable;
     
     // DB tables provided by StDbManager in standalone mode
     StDbTable       *mBemcTable;

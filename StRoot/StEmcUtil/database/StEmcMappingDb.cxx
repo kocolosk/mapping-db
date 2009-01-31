@@ -104,10 +104,15 @@ void StEmcMappingDb::SetDateTime(int date, int time) {
     }
     else {
         mBeginTime.Set(date, time);
-        mBemcDirty = true;
-        mBprsDirty = true;
-        mSmdeDirty = true;
-        mSmdpDirty = true;
+        unsigned unix = TUnixTime::Convert(mBeginTime, true);
+        if( !(mBemcTable->getBeginTime() < unix < mBemcTable->getEndTime()) )
+            mBemcDirty = true;
+        if( !(mBprsTable->getBeginTime() < unix < mBprsTable->getEndTime()) )
+            mBprsDirty = true;
+        if( !(mSmdeTable->getBeginTime() < unix < mSmdeTable->getEndTime()) )
+            mSmdeDirty = true;
+        if( !(mSmdpTable->getBeginTime() < unix < mSmdpTable->getEndTime()) )
+            mSmdpDirty = true;
     }
 }
 
@@ -116,33 +121,29 @@ void StEmcMappingDb::SetFlavor(const char *flavor, const char *tablename) {
         LOG_ERROR << "StEmcMappingDb::SetFlavor is illegal in a chain" << endm;
     }
     else {
-        if(tablename) {
-            if(!strcmp(tablename, "bemcMap"))  {
+        if(!tablename || !strcmp(tablename, "bemcMap"))  {
+            if(strcmp(mBemcTable->getFlavor(), flavor)) {
                 mBemcTable->setFlavor(flavor);
                 mBemcDirty = true;
             }
-            if(!strcmp(tablename, "bprsMap")) {
+        }
+        if(!tablename || !strcmp(tablename, "bprsMap")) {
+            if(strcmp(mBprsTable->getFlavor(), flavor)) {
                 mBprsTable->setFlavor(flavor);
                 mBprsDirty = true;
             }
-            if(!strcmp(tablename, "bsmdeMap")) {
+        }
+        if(!tablename || !strcmp(tablename, "bsmdeMap")) {
+            if(strcmp(mSmdeTable->getFlavor(), flavor)) {
                 mSmdeTable->setFlavor(flavor);
                 mSmdeDirty = true;
             }
-            if(!strcmp(tablename, "bsmdpMap")) {
+        }
+        if(!tablename || !strcmp(tablename, "bsmdpMap")) {
+            if(strcmp(mSmdpTable->getFlavor(), flavor)) {
                 mSmdpTable->setFlavor(flavor);
                 mSmdpDirty = true;
             }
-        }
-        else {
-            mBemcTable->setFlavor(flavor);
-            mBprsTable->setFlavor(flavor);
-            mSmdeTable->setFlavor(flavor);
-            mSmdpTable->setFlavor(flavor);
-            mBemcDirty = true;
-            mBprsDirty = true;
-            mSmdeDirty = true;
-            mSmdpDirty = true;
         }
     }
 }
@@ -153,14 +154,22 @@ void StEmcMappingDb::SetMaxEntryTime(int date, int time) {
     }
     else {
         unsigned unixMax = TUnixTime::Convert(TDatime(date,time), true);
-        mBemcTable->setProdTime(unixMax);
-        mBprsTable->setProdTime(unixMax);
-        mSmdeTable->setProdTime(unixMax);
-        mSmdpTable->setProdTime(unixMax);
-        mBemcDirty = true;
-        mBprsDirty = true;
-        mSmdeDirty = true;
-        mSmdpDirty = true;
+        if(mBemcTable->getProdTime() != unixMax) {
+            mBemcTable->setProdTime(unixMax);
+            mBemcDirty = true;
+        }
+        if(mBprsTable->getProdTime() != unixMax) {
+            mBprsTable->setProdTime(unixMax);
+            mBprsDirty = true;
+        }
+        if(mSmdeTable->getProdTime() != unixMax) {
+            mSmdeTable->setProdTime(unixMax);
+            mSmdeDirty = true;
+        }
+        if(mSmdpTable->getProdTime() != unixMax) {
+            mSmdpTable->setProdTime(unixMax);
+            mSmdpDirty = true;
+        }        
     }
 }
 

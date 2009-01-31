@@ -13,7 +13,6 @@ TestMappingDb(bool useMaker=false, bool useJprof=true) {
     TStopwatch timer;
     
     StEmcMappingDb mapping;
-    if(useMaker) mapping.Init();
     mapping.bemc(1);
     mapping.bsmde(1);
     

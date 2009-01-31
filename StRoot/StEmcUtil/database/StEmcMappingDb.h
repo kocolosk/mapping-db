@@ -25,8 +25,6 @@ using std::map;
 #include "bsmdeMap.h"
 #include "bsmdpMap.h"
 
-class TTableSorter;
-
 class St_bemcMap;
 class St_bsmdeMap;
 class St_bsmdpMap;
@@ -40,8 +38,6 @@ class StEmcMappingDb : public TObject
 public:
     StEmcMappingDb(int date=20330101, int time=0);
     virtual ~StEmcMappingDb();
-    
-    void Init();
     
     /// St_db_Maker-compatible interface
     void SetDateTime(int date, int time);
@@ -71,19 +67,12 @@ public:
     int softIdFromRDO(StDetectorId det, int rdo, int channel) const;
 
 private:
-    // DB tables provided by St_db_Maker -- prefer to use these
     mutable St_bemcMap      *mBemcTTable;
     mutable St_bprsMap      *mBprsTTable;
     mutable St_bsmdeMap     *mSmdeTTable;
     mutable St_bsmdpMap     *mSmdpTTable;
     
-    // version info from StMaker::GetValidity -- used to expire caches
-    mutable Int_t   mBemcValidity;
-    mutable Int_t   mBprsValidity;
-    mutable Int_t   mSmdeValidity;
-    mutable Int_t   mSmdpValidity;
-    
-    // DB tables provided by StDbManager in standalone mode
+    // use these to pull data from DB if we're not in a chain
     StDbTable       *mBemcTable;
     StDbTable       *mBprsTable;
     StDbTable       *mSmdeTable;
@@ -100,8 +89,6 @@ private:
     TDatime         mBeginTime;
     void            maybe_reload(StDetectorId) const;
     void            reload_dbtable(StDbTable*) const;
-    
-    mutable TTableSorter*   mCacheDaqId;
     
     ClassDef(StEmcMappingDb, 2)
 };

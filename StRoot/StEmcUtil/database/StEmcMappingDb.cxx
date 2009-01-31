@@ -2,8 +2,6 @@
 
 #include "StEmcMappingDb.h"
 
-#include "TTableSorter.h"
-
 #include "TUnixTime.h"
 #include "StMessMgr.h"
 #include "StMaker.h"
@@ -23,7 +21,7 @@ StEmcMappingDb::StEmcMappingDb(int date, int time) : mBemcTTable(NULL),
     mBprsTTable(NULL), mSmdeTTable(NULL), mSmdpTTable(NULL), mBemcValidity(-2),
     mBprsValidity(-2), mSmdeValidity(-2), mSmdpValidity(-2), mBemcTable(NULL),
     mBprsTable(NULL), mSmdeTable(NULL), mSmdpTable(NULL), mBemcDirty(true),
-    mBprsDirty(true), mSmdeDirty(true), mSmdpDirty(true), mCacheDaqId(NULL)
+    mBprsDirty(true), mSmdeDirty(true), mSmdpDirty(true)
 {
     mChain = StMaker::GetChain();
     
@@ -71,31 +69,6 @@ StEmcMappingDb::~StEmcMappingDb() {
     // memory, since the StDbTables already own it.  I don't want to copy the
     // data because it's ~6 MB or so.  Each TTable only has 2 Long_ts and an
     // Int_t; I think this should be OK.
-}
-
-void StEmcMappingDb::Init() {
-    if(!mChain) return;
-    LOG_DEBUG << "initializing StEmcMappingDb using St_db_Maker" << endm;
-    TDataSet *DB = mChain->GetInputDB("Calibrations/emc/map");
-    
-    Int_t version;
-    
-    if((version = mChain->GetValidity(mBemcTTable,NULL)) != mBemcValidity) {
-        mBemcValidity = version;
-        mBemcTTable = static_cast<St_bemcMap*>(DB->Find("bemcMap"));
-    }
-    if((version = mChain->GetValidity(mBprsTTable,NULL)) != mBprsValidity) {
-        mBprsValidity = version;
-        mBprsTTable = static_cast<St_bprsMap*>(DB->Find("bprsMap"));
-    }
-    if((version = mChain->GetValidity(mSmdeTTable,NULL)) != mSmdeValidity) {
-        mSmdeValidity = version;
-        mSmdeTTable = static_cast<St_bsmdeMap*>(DB->Find("bsmdeMap"));
-    }
-    if((version = mChain->GetValidity(mSmdpTTable,NULL)) != mSmdpValidity) {
-        mSmdpValidity = version;
-        mSmdpTTable = static_cast<St_bsmdpMap*>(DB->Find("bsmdpMap"));
-    }
 }
 
 void StEmcMappingDb::SetDateTime(int date, int time) {
@@ -257,12 +230,6 @@ StEmcMappingDb::softIdFromDaqId(StDetectorId det, int daqId) const {
         for(int i=0; i<4800; ++i) {
             if(map[i].daqID == daqId) return i+1;
         }
-        //if(!mCacheDaqId) {
-        //    TString key("daqID");
-        //    mCacheDaqId = new TTableSorter(mBemcTTable, key);
-        //}
-        //cerr << "this sorter has N keys " << mCacheDaqId->CountKeys() << endl;
-        //return (*mCacheDaqId)[daqId] + 1;
     }
     return 0;
 }

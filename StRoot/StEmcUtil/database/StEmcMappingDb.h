@@ -12,9 +12,6 @@
  * StDbManager directly.
  *****************************************************************************/
 
-#include <map>
-using std::map;
- 
 #include "TObject.h"
 #include "TDatime.h"
 

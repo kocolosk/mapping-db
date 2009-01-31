@@ -166,54 +166,26 @@ void StEmcMappingDb::SetMaxEntryTime(int date, int time) {
 
 // struct declaration auto-generated at $STAR/include/bemcMap.h
 const bemcMap_st* StEmcMappingDb::bemc() const {
-    if(mChain) {
-        if(!mBemcTTable) {
-            TDataSet *DB = mChain->GetInputDB("Calibrations/emc/map");
-            mBemcTTable = DB ? static_cast<St_bemcMap*>(DB->Find("bemcMap")) : 0;
-        }
-        return mBemcTTable ? mBemcTTable->GetTable() : 0;
-    }
     maybe_reload(kBarrelEmcTowerId);
-    return (bemcMap_st*)mBemcTable->GetTable();
+    return mBemcTTable->GetTable();
 }
 
 // struct declaration auto-generated at $STAR/include/bprsMap.h
 const bprsMap_st* StEmcMappingDb::bprs() const {
-    if(mChain) {
-        if(!mBprsTTable) {
-            TDataSet *DB = mChain->GetInputDB("Calibrations/emc/map");
-            mBprsTTable = DB ? static_cast<St_bprsMap*>(DB->Find("bprsMap")) : 0;
-        }
-        return mBprsTTable ? mBprsTTable->GetTable() : 0;
-    } 
     maybe_reload(kBarrelEmcPreShowerId);
-    return (bprsMap_st*)mBprsTable->GetTable();
+    return mBprsTTable->GetTable();
 }
 
 // struct declaration auto-generated at $STAR/include/bsmdeMap.h
 const bsmdeMap_st* StEmcMappingDb::bsmde() const {
-    if(mChain) {
-        if(!mSmdeTTable) {
-            TDataSet *DB = mChain->GetInputDB("Calibrations/emc/map");
-            mSmdeTTable = DB ? static_cast<St_bsmdeMap*>(DB->Find("bsmdeMap")) : 0;
-        }
-        return mSmdeTTable ? mSmdeTTable->GetTable() : 0;
-    } 
     maybe_reload(kBarrelSmdEtaStripId);
-    return (bsmdeMap_st*)mSmdeTable->GetTable();
+    return mSmdeTTable->GetTable();
 }
 
 // struct declaration auto-generated at $STAR/include/bsmdpMap.h
 const bsmdpMap_st* StEmcMappingDb::bsmdp() const {
-    if(mChain) {
-        if(!mSmdpTTable) {
-            TDataSet *DB = mChain->GetInputDB("Calibrations/emc/map");
-            mSmdpTTable = DB ? static_cast<St_bsmdpMap*>(DB->Find("bsmdpMap")) : 0;
-        }
-        return mSmdpTTable ? mSmdpTTable->GetTable() : 0;
-    } 
     maybe_reload(kBarrelSmdPhiStripId);
-    return (bsmdpMap_st*)mSmdpTable->GetTable();
+    return mSmdpTTable->GetTable();
 }
 
 int 
@@ -332,26 +304,53 @@ StEmcMappingDb::softIdFromRDO(StDetectorId det, int rdo, int channel) const {
 
 /* Private methods used for caching SQL query results */
 void StEmcMappingDb::maybe_reload(StDetectorId det) const {
-    if(mChain) return;
     switch(det) {
         case kBarrelEmcTowerId:
-        if(mBemcDirty) reload_dbtable(mBemcTable);
-        mBemcDirty = false;
+        if(mChain) {
+            if(!mBemcTTable) {
+                TDataSet *DB = mChain->GetInputDB("Calibrations/emc/map");
+                if(DB) mBemcTTable = static_cast<St_bemcMap*>(DB->Find("bemcMap"));
+            }
+        } else {
+            if(mBemcDirty) reload_dbtable(mBemcTable);
+            mBemcDirty = false;
+        }
         break;
         
         case kBarrelEmcPreShowerId:
-        if(mBprsDirty) reload_dbtable(mBprsTable);
-        mBprsDirty = false;
+        if(mChain) {
+            if(!mBprsTTable) {
+                TDataSet *DB = mChain->GetInputDB("Calibrations/emc/map");
+                if(DB) mBprsTTable = static_cast<St_bprsMap*>(DB->Find("bprsMap"));
+            }
+        } else {
+            if(mBprsDirty) reload_dbtable(mBprsTable);
+            mBprsDirty = false;
+        }
         break;
         
         case kBarrelSmdEtaStripId:
-        if(mSmdeDirty) reload_dbtable(mSmdeTable);
-        mSmdeDirty = false;
+        if(mChain) {
+            if(!mSmdeTTable) {
+                TDataSet *DB = mChain->GetInputDB("Calibrations/emc/map");
+                if(DB) mSmdeTTable = static_cast<St_bsmdeMap*>(DB->Find("bsmdeMap"));
+            }
+        } else {
+            if(mSmdeDirty) reload_dbtable(mSmdeTable);
+            mSmdeDirty = false;
+        }
         break;
         
         case kBarrelSmdPhiStripId:
-        if(mSmdpDirty) reload_dbtable(mSmdpTable);
-        mSmdpDirty = false;
+        if(mChain) {
+            if(!mSmdpTTable) {
+                TDataSet *DB = mChain->GetInputDB("Calibrations/emc/map");
+                if(DB) mSmdpTTable = static_cast<St_bsmdpMap*>(DB->Find("bsmdpMap"));
+            }
+        } else {
+            if(mSmdpDirty) reload_dbtable(mSmdpTable);
+            mSmdpDirty = false;
+        }
         default: break;
     }
 }
@@ -362,7 +361,6 @@ void StEmcMappingDb::reload_dbtable(StDbTable* table) const {
     mgr->setVerbose(false);
     mgr->setRequestTime(mBeginTime.AsSQLString());
     mgr->fetchDbTable(table);
-    delete mCacheDaqId; mCacheDaqId = NULL;
 }
 
 /*****************************************************************************

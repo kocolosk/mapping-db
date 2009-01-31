@@ -166,28 +166,52 @@ void StEmcMappingDb::SetMaxEntryTime(int date, int time) {
 
 // struct declaration auto-generated at $STAR/include/bemcMap.h
 const bemcMap_st* StEmcMappingDb::bemc() const {
-    if(mChain) return mBemcTTable->GetTable();
+    if(mChain) {
+        if(!mBemcTTable) {
+            TDataSet *DB = mChain->GetInputDB("Calibrations/emc/map");
+            mBemcTTable = DB ? static_cast<St_bemcMap*>(DB->Find("bemcMap")) : 0;
+        }
+        return mBemcTTable ? mBemcTTable->GetTable() : 0;
+    }
     maybe_reload(kBarrelEmcTowerId);
     return (bemcMap_st*)mBemcTable->GetTable();
 }
 
 // struct declaration auto-generated at $STAR/include/bprsMap.h
 const bprsMap_st* StEmcMappingDb::bprs() const {
-    if(mChain) return mBprsTTable->GetTable();
+    if(mChain) {
+        if(!mBprsTTable) {
+            TDataSet *DB = mChain->GetInputDB("Calibrations/emc/map");
+            mBprsTTable = DB ? static_cast<St_bprsMap*>(DB->Find("bprsMap")) : 0;
+        }
+        return mBprsTTable ? mBprsTTable->GetTable() : 0;
+    } 
     maybe_reload(kBarrelEmcPreShowerId);
     return (bprsMap_st*)mBprsTable->GetTable();
 }
 
 // struct declaration auto-generated at $STAR/include/bsmdeMap.h
 const bsmdeMap_st* StEmcMappingDb::bsmde() const {
-    if(mChain) return mSmdeTTable->GetTable();
+    if(mChain) {
+        if(!mSmdeTTable) {
+            TDataSet *DB = mChain->GetInputDB("Calibrations/emc/map");
+            mSmdeTTable = DB ? static_cast<St_bsmdeMap*>(DB->Find("bsmdeMap")) : 0;
+        }
+        return mSmdeTTable ? mSmdeTTable->GetTable() : 0;
+    } 
     maybe_reload(kBarrelSmdEtaStripId);
     return (bsmdeMap_st*)mSmdeTable->GetTable();
 }
 
 // struct declaration auto-generated at $STAR/include/bsmdpMap.h
 const bsmdpMap_st* StEmcMappingDb::bsmdp() const {
-    if(mChain) return mSmdpTTable->GetTable();
+    if(mChain) {
+        if(!mSmdpTTable) {
+            TDataSet *DB = mChain->GetInputDB("Calibrations/emc/map");
+            mSmdpTTable = DB ? static_cast<St_bsmdpMap*>(DB->Find("bsmdpMap")) : 0;
+        }
+        return mSmdpTTable ? mSmdpTTable->GetTable() : 0;
+    } 
     maybe_reload(kBarrelSmdPhiStripId);
     return (bsmdpMap_st*)mSmdpTable->GetTable();
 }
@@ -249,12 +273,15 @@ int
 StEmcMappingDb::softIdFromDaqId(StDetectorId det, int daqId) const {
     if(det == kBarrelEmcTowerId) {
         const bemcMap_st* map = bemc();
-        if(!mCacheDaqId) {
-            TString key("daqID");
-            mCacheDaqId = new TTableSorter(mBemcTTable, key);
+        for(int i=0; i<4800; ++i) {
+            if(map[i].daqID == daqId) return i+1;
         }
-        cerr << "this sorter has N keys " << mCacheDaqId->CountKeys() << endl;
-        return (*mCacheDaqId)[daqId] + 1;
+        //if(!mCacheDaqId) {
+        //    TString key("daqID");
+        //    mCacheDaqId = new TTableSorter(mBemcTTable, key);
+        //}
+        //cerr << "this sorter has N keys " << mCacheDaqId->CountKeys() << endl;
+        //return (*mCacheDaqId)[daqId] + 1;
     }
     return 0;
 }

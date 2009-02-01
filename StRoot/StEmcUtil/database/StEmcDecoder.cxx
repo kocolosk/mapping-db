@@ -133,11 +133,10 @@ int StEmcDecoder::GetTowerTDCFromCrate(int crate, int& TDC) const {
 \param TDC is the TDC channel number
 */
 int StEmcDecoder::GetTowerTDCFromDaqId(int RDO, int& TDC) const {
-    for(int id=1; id<=4800; id++) {
-        if(mapping.bemc(id).daqID == RDO) {
-            TDC = mapping.bemc(id).TDC;
-            return 1;
-        }
+    short id;
+    if((id = mapping.softIdFromDaqId(kBarrelEmcTowerId, RDO))) {
+        TDC = mapping.bemc(id).TDC;
+        return 1; 
     }
     return 0;
 }
@@ -149,12 +148,11 @@ int StEmcDecoder::GetTowerTDCFromDaqId(int RDO, int& TDC) const {
 */
 int StEmcDecoder::
 GetTowerCrateFromDaqId(int RDO, int& crate, int& crate_sequency) const {
-    for(int id=1; id<=4800; id++) {
-        if(mapping.bemc(id).daqID == RDO) {
-            crate = mapping.bemc(id).crate;
-            crate_sequency = mapping.bemc(id).crateChannel;
-            return 1;
-        }
+    short id;
+    if((id = mapping.softIdFromDaqId(kBarrelEmcTowerId, RDO))) {
+        crate = mapping.bemc(id).crate;
+        crate_sequency = mapping.bemc(id).crateChannel;
+        return 1; 
     }
     return 0;
 }
@@ -164,11 +162,10 @@ GetTowerCrateFromDaqId(int RDO, int& crate, int& crate_sequency) const {
 \param TowerId is the software id for towers
 */
 int StEmcDecoder::GetTowerIdFromDaqId(int RDO,int& TowerId) const {
-    for(int id=1; id<=4800; id++) {
-        if(mapping.bemc(id).daqID == RDO) {
-            TowerId = id;
-            return 1;
-        }
+    short id;
+    if((id = mapping.softIdFromDaqId(kBarrelEmcTowerId, RDO))) {
+        TowerId = id;
+        return 1; 
     }
     return 0;
 }
@@ -364,29 +361,24 @@ int StEmcDecoder::GetSmdCoord(int RDO, int index, int& detector, int& module,
 int StEmcDecoder::GetSmdCoord(int RDO, int index, int& det, int& m, int& e, 
     int& s, int& wire, int& A_value, bool print) const 
 {
-    for(int id=1; id<=18000; id++) {
-        if(mapping.bsmde(id).rdo == RDO) {
-            if(mapping.bsmde(id).rdoChannel == index) {
-                det = 3;
-                m = mapping.bsmde(id).m;
-                e = mapping.bsmde(id).e;
-                s = mapping.bsmde(id).s;
-                wire = mapping.bsmde(id).wire;
-                A_value = mapping.bsmde(id).feeA;
-                return 1;
-            }
-        }
-        if(mapping.bsmdp(id).rdo == RDO) {
-            if(mapping.bsmdp(id).rdoChannel == index) {
-                det = 4;
-                m = mapping.bsmdp(id).m;
-                e = mapping.bsmdp(id).e;
-                s = mapping.bsmdp(id).s;
-                wire = mapping.bsmdp(id).wire;
-                A_value = mapping.bsmdp(id).feeA;
-                return 1;
-            }
-        }
+    short id;
+    if((id = mapping.softIdFromRDO(kBarrelSmdEtaStripId, RDO, index))) {
+        det = 3;
+        m = mapping.bsmde(id).m;
+        e = mapping.bsmde(id).e;
+        s = mapping.bsmde(id).s;
+        wire = mapping.bsmde(id).wire;
+        A_value = mapping.bsmde(id).feeA;
+        return 1;
+    }
+    else if((id = mapping.softIdFromRDO(kBarrelSmdPhiStripId, RDO, index))) {
+        det = 4;
+        m = mapping.bsmdp(id).m;
+        e = mapping.bsmdp(id).e;
+        s = mapping.bsmdp(id).s;
+        wire = mapping.bsmdp(id).wire;
+        A_value = mapping.bsmdp(id).feeA;
+        return 1;
     }
     return 0;
 }
@@ -420,16 +412,11 @@ the same decoder.
 int StEmcDecoder::GetPsdId(int RDO,int index, int& softId, int& PMTBox, 
     int& wire, int& A_value, bool print) const
 {
-    for(int id=1; id<=4800; id++) {
-        if(mapping.bprs(id).rdo == RDO) {
-            if(mapping.bprs(id).rdoChannel == index) {
-                softId = id;
-                PMTBox = mapping.bprs(id).PMTbox;
-                wire = mapping.bprs(id).wire;
-                A_value = mapping.bprs(id).feeA;
-                return 1;
-            }
-        }
+    if((softId = mapping.softIdFromRDO(kBarrelEmcPreShowerId, RDO, index))) {
+        PMTBox = mapping.bprs(softId).PMTbox;
+        wire = mapping.bprs(softId).wire;
+        A_value = mapping.bprs(softId).feeA;
+        return 1;
     }
     return 0;
 }

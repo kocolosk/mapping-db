@@ -302,7 +302,7 @@ StEmcMappingDb::softIdFromRDO(StDetectorId det, int rdo, int channel) const {
             mCacheBprsRdo[rdo][channel] = 0;
             return 0;
             
-            // confirm cache validity
+            // check cache validity before accepting an empty channel
             case 0:
             if(maybe_reset_cache(kBarrelEmcPreShowerId)) 
                 return softIdFromRDO(det, rdo, channel);
@@ -317,68 +317,46 @@ StEmcMappingDb::softIdFromRDO(StDetectorId det, int rdo, int channel) const {
             }
         }
         
-        
-        case kBarrelSmdEtaStripId:
+        case kBarrelSmdEtaStripId: case kBarrelSmdPhiStripId:
         const bsmdeMap_st *smde = bsmde();
-        if(mCacheSmdeRdo[rdo][channel] == -1) {
+        const bsmdpMap_st *smdp = bsmdp();
+        if(mCacheSmdRdo[rdo][channel] == -1) {
             for(int i=0; i<18000; i++) {
                 if(smde[i].rdo == rdo && smde[i].rdoChannel == channel) {
-                    mCacheSmdeRdo[rdo][channel] = i+1;
-                    return i+1;
+                    mCacheSmdRdo[rdo][channel] = i+1;
+                    if(det == kBarrelSmdEtaStripId) return i+1;
+                }
+                else if(smdp[i].rdo == rdo && smdp[i].rdoChannel == channel) {
+                    mCacheSmdRdo[rdo][channel] = i+1;
+                    if(det == kBarrelSmdPhiStripId) return i+1;
                 }
             }
         }
         
-        switch((id = mCacheSmdeRdo[rdo][channel])) {
+        switch((id = mCacheSmdRdo[rdo][channel])) {
             // didn't find it on a linear search, must be empty channel
             case -1:
-            mCacheSmdeRdo[rdo][channel] = 0;
+            mCacheSmdRdo[rdo][channel] = 0;
             return 0;
             
-            // confirm cache validity
+            // check cache validity before accepting an empty channel
             case 0:
-            if(maybe_reset_cache(kBarrelSmdEtaStripId)) 
+            if(maybe_reset_cache(det)) 
                 return softIdFromRDO(det, rdo, channel);
             else return 0;
             
+            // confirm result
             default:
             if(smde[id-1].rdo == rdo && smde[id-1].rdoChannel == channel) {
-                return id;
-            } else {
-                reset_smde_cache();
-                return softIdFromRDO(det, rdo, channel);
+                if(det == kBarrelSmdEtaStripId) return id;
+                return 0;
             }
-        }
-        
-        
-        case kBarrelSmdPhiStripId:
-        const bsmdpMap_st *smdp = bsmdp();
-        if(mCacheSmdpRdo[rdo][channel] == -1) {
-            for(int i=0; i<18000; i++) {
-                if(smdp[i].rdo == rdo && smdp[i].rdoChannel == channel) {
-                    mCacheSmdpRdo[rdo][channel] = i+1;
-                    return i+1;
-                }
-            }
-        }
-        
-        switch((id = mCacheSmdpRdo[rdo][channel])) {
-            // didn't find it on a linear search, must be empty channel
-            case -1:
-            mCacheSmdpRdo[rdo][channel] = 0;
-            return 0;
-            
-            // confirm cache validity
-            case 0:
-            if(maybe_reset_cache(kBarrelSmdPhiStripId)) 
-                return softIdFromRDO(det, rdo, channel);
-            else return 0;
-            
-            default:
-            if(smdp[id-1].rdo == rdo && smdp[id-1].rdoChannel == channel) {
-                return id;
-            } else {
-                reset_smdp_cache();
+            else if(smdp[id-1].rdo == rdo && smdp[id-1].rdoChannel == channel) {
+                if(det == kBarrelSmdPhiStripId) return id;
+                return 0;
+            } 
+            else {
+                reset_smde_cache(); // also resets smdp cache
                 return softIdFromRDO(det, rdo, channel);
             }
         }
@@ -499,11 +477,11 @@ void StEmcMappingDb::reset_bprs_cache() const {
 }
 
 void StEmcMappingDb::reset_smde_cache() const {
-    memset(mCacheSmdeRdo, -1, sizeof(mCacheSmdeRdo));
+    memset(mCacheSmdRdo, -1, sizeof(mCacheSmdRdo));
 }
 
 void StEmcMappingDb::reset_smdp_cache() const {
-    memset(mCacheSmdpRdo, -1, sizeof(mCacheSmdpRdo));
+    memset(mCacheSmdRdo, -1, sizeof(mCacheSmdRdo));
 }
 
 /*****************************************************************************

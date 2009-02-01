@@ -102,8 +102,7 @@ private:
     
     mutable short mCacheDaqId[4800];
     mutable short mCacheBprsRdo[4][4800];
-    mutable short mCacheSmdeRdo[8][4800];
-    mutable short mCacheSmdpRdo[8][4800];
+    mutable short mCacheSmdRdo[8][4800];
     
     ClassDef(StEmcMappingDb, 2)
 };

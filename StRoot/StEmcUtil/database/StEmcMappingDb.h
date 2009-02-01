@@ -12,9 +12,6 @@
  * StDbManager directly.
  *****************************************************************************/
 
-#include <map>
-using std::map;
- 
 #include "TObject.h"
 #include "TDatime.h"
 
@@ -24,8 +21,6 @@ using std::map;
 #include "bprsMap.h"
 #include "bsmdeMap.h"
 #include "bsmdpMap.h"
-
-class TTableSorter;
 
 class St_bemcMap;
 class St_bsmdeMap;
@@ -100,8 +95,15 @@ private:
     TDatime         mBeginTime;
     void            maybe_reload(StDetectorId) const;
     void            reload_dbtable(StDbTable*) const;
+    void            reset_bemc_cache() const;
+    void            reset_bprs_cache() const;
+    void            reset_smde_cache() const;
+    void            reset_smdp_cache() const;
     
-    mutable TTableSorter*   mCacheDaqId;
+    mutable short mCacheDaqId[4800];
+    mutable short mCacheBprsRdo[4][4800];
+    mutable short mCacheSmdeRdo[8][4800];
+    mutable short mCacheSmdpRdo[8][4800];
     
     ClassDef(StEmcMappingDb, 2)
 };

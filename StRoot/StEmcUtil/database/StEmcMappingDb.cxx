@@ -2,8 +2,6 @@
 
 #include "StEmcMappingDb.h"
 
-#include "TTableSorter.h"
-
 #include "TUnixTime.h"
 #include "StMessMgr.h"
 #include "StMaker.h"
@@ -23,9 +21,14 @@ StEmcMappingDb::StEmcMappingDb(int date, int time) : mBemcTTable(NULL),
     mBprsTTable(NULL), mSmdeTTable(NULL), mSmdpTTable(NULL), mBemcValidity(-2),
     mBprsValidity(-2), mSmdeValidity(-2), mSmdpValidity(-2), mBemcTable(NULL),
     mBprsTable(NULL), mSmdeTable(NULL), mSmdpTable(NULL), mBemcDirty(true),
-    mBprsDirty(true), mSmdeDirty(true), mSmdpDirty(true), mCacheDaqId(NULL)
+    mBprsDirty(true), mSmdeDirty(true), mSmdpDirty(true)
 {
     mChain = StMaker::GetChain();
+    
+    reset_bemc_cache();
+    reset_bprs_cache();
+    reset_smde_cache();
+    reset_smdp_cache();
     
     if(!mChain) {
         StDbManager *mgr = StDbManager::Instance();
@@ -105,14 +108,22 @@ void StEmcMappingDb::SetDateTime(int date, int time) {
     else {
         mBeginTime.Set(date, time);
         unsigned unix = TUnixTime::Convert(mBeginTime, true);
-        if( !(mBemcTable->getBeginTime() < unix < mBemcTable->getEndTime()) )
+        if( !(mBemcTable->getBeginTime() < unix < mBemcTable->getEndTime()) ) {
             mBemcDirty = true;
-        if( !(mBprsTable->getBeginTime() < unix < mBprsTable->getEndTime()) )
+            reset_bemc_cache();
+        }
+        if( !(mBprsTable->getBeginTime() < unix < mBprsTable->getEndTime()) ) {
             mBprsDirty = true;
-        if( !(mSmdeTable->getBeginTime() < unix < mSmdeTable->getEndTime()) )
+            reset_bprs_cache();
+        }
+        if( !(mSmdeTable->getBeginTime() < unix < mSmdeTable->getEndTime()) ) {
             mSmdeDirty = true;
-        if( !(mSmdpTable->getBeginTime() < unix < mSmdpTable->getEndTime()) )
+            reset_smde_cache();
+        }
+        if( !(mSmdpTable->getBeginTime() < unix < mSmdpTable->getEndTime()) ) {
             mSmdpDirty = true;
+            reset_smdp_cache();
+        }
     }
 }
 
@@ -125,24 +136,28 @@ void StEmcMappingDb::SetFlavor(const char *flavor, const char *tablename) {
             if(strcmp(mBemcTable->getFlavor(), flavor)) {
                 mBemcTable->setFlavor(flavor);
                 mBemcDirty = true;
+                reset_bemc_cache();
             }
         }
         if(!tablename || !strcmp(tablename, "bprsMap")) {
             if(strcmp(mBprsTable->getFlavor(), flavor)) {
                 mBprsTable->setFlavor(flavor);
                 mBprsDirty = true;
+                reset_bprs_cache();
             }
         }
         if(!tablename || !strcmp(tablename, "bsmdeMap")) {
             if(strcmp(mSmdeTable->getFlavor(), flavor)) {
                 mSmdeTable->setFlavor(flavor);
                 mSmdeDirty = true;
+                reset_smde_cache();
             }
         }
         if(!tablename || !strcmp(tablename, "bsmdpMap")) {
             if(strcmp(mSmdpTable->getFlavor(), flavor)) {
                 mSmdpTable->setFlavor(flavor);
                 mSmdpDirty = true;
+                reset_smdp_cache();
             }
         }
     }
@@ -157,18 +172,22 @@ void StEmcMappingDb::SetMaxEntryTime(int date, int time) {
         if(mBemcTable->getProdTime() != unixMax) {
             mBemcTable->setProdTime(unixMax);
             mBemcDirty = true;
+            reset_bemc_cache();
         }
         if(mBprsTable->getProdTime() != unixMax) {
             mBprsTable->setProdTime(unixMax);
             mBprsDirty = true;
+            reset_bprs_cache();
         }
         if(mSmdeTable->getProdTime() != unixMax) {
             mSmdeTable->setProdTime(unixMax);
             mSmdeDirty = true;
+            reset_smde_cache();
         }
         if(mSmdpTable->getProdTime() != unixMax) {
             mSmdpTable->setProdTime(unixMax);
             mSmdpDirty = true;
+            reset_smdp_cache();
         }        
     }
 }
@@ -251,18 +270,18 @@ StEmcMappingDb::softIdFromCrate(StDetectorId det, int crate, int channel) const 
 }
 
 int 
-StEmcMappingDb::softIdFromDaqId(StDetectorId det, int daqId) const {
+StEmcMappingDb::softIdFromDaqId(StDetectorId det, int daqID) const {
     if(det == kBarrelEmcTowerId) {
         const bemcMap_st* map = bemc();
-        for(int i=0; i<4800; ++i) {
-            if(map[i].daqID == daqId) return i+1;
+        if(!mCacheDaqId[daqID]) {
+            for(int i=0; i<4800; ++i) {
+                if(map[i].daqID == daqID) {
+                    mCacheDaqId[daqID] = i+1;
+                    break;
+                }
+            }
         }
-        //if(!mCacheDaqId) {
-        //    TString key("daqID");
-        //    mCacheDaqId = new TTableSorter(mBemcTTable, key);
-        //}
-        //cerr << "this sorter has N keys " << mCacheDaqId->CountKeys() << endl;
-        //return (*mCacheDaqId)[daqId] + 1;
+        return mCacheDaqId[daqID];
     }
     return 0;
 }
@@ -285,27 +304,46 @@ StEmcMappingDb::softIdFromRDO(StDetectorId det, int rdo, int channel) const {
     switch(det) {
         case kBarrelEmcPreShowerId:
         const bprsMap_st* prs = bprs();
-        for(int i=0; i<4800; i++) {
-            if(prs[i].rdo == rdo && prs[i].rdoChannel == channel) {
-                return i+1;
+        if(mCacheBprsRdo[rdo][channel] == -1) {
+            for(int i=0; i<4800; i++) {
+                if(prs[i].rdo == rdo && prs[i].rdoChannel == channel) {
+                    mCacheBprsRdo[rdo][channel] = i+1;
+                    break;
+                }
             }
         }
-        break;
+        // we didn't find a match, it must be an empty channel
+        if(mCacheBprsRdo[rdo][channel] == -1) mCacheBprsRdo[rdo][channel] = 0;
+        return mCacheBprsRdo[rdo][channel];
+        
         case kBarrelSmdEtaStripId:
         const bsmdeMap_st *smde = bsmde();
-        for(int i=0; i<18000; i++) {
-            if(smde[i].rdo == rdo && smde[i].rdoChannel == channel) {
-                return i+1;
+        if(mCacheSmdeRdo[rdo][channel] == -1) {
+            for(int i=0; i<18000; i++) {
+                if(smde[i].rdo == rdo && smde[i].rdoChannel == channel) {
+                    mCacheSmdeRdo[rdo][channel] = i+1;
+                    break;
+                }
             }
         }
-        break;
+        // we didn't find a match, it must be an empty channel or phi plane
+        if(mCacheSmdeRdo[rdo][channel] == -1) mCacheSmdeRdo[rdo][channel] = 0;
+        return mCacheSmdeRdo[rdo][channel];
+        
         case kBarrelSmdPhiStripId:
         const bsmdpMap_st *smdp = bsmdp();
-        for(int i=0; i<18000; i++) {
-            if(smdp[i].rdo == rdo && smdp[i].rdoChannel == channel) {
-                return i+1;
+        if(mCacheSmdpRdo[rdo][channel] == -1) {
+            for(int i=0; i<18000; i++) {
+                if(smdp[i].rdo == rdo && smdp[i].rdoChannel == channel) {
+                    mCacheSmdpRdo[rdo][channel] = i+1;
+                    break;
+                }
             }
         }
+        // we didn't find a match, it must be an empty channel or eta plane
+        if(mCacheSmdpRdo[rdo][channel] == -1) mCacheSmdpRdo[rdo][channel] = 0;
+        return mCacheSmdpRdo[rdo][channel];
+        
         default: break;
     }
     return 0;
@@ -370,6 +408,22 @@ void StEmcMappingDb::reload_dbtable(StDbTable* table) const {
     mgr->setVerbose(false);
     mgr->setRequestTime(mBeginTime.AsSQLString());
     mgr->fetchDbTable(table);
+}
+
+void StEmcMappingDb::reset_bemc_cache() const {
+    memset(mCacheDaqId, 0, sizeof(mCacheDaqId));
+}
+
+void StEmcMappingDb::reset_bprs_cache() const {
+    memset(mCacheBprsRdo, -1, sizeof(mCacheBprsRdo));
+}
+
+void StEmcMappingDb::reset_smde_cache() const {
+    memset(mCacheSmdeRdo, -1, sizeof(mCacheSmdeRdo));
+}
+
+void StEmcMappingDb::reset_smdp_cache() const {
+    memset(mCacheSmdpRdo, -1, sizeof(mCacheSmdpRdo));
 }
 
 /*****************************************************************************

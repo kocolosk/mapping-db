@@ -15,8 +15,10 @@
 #include "tables/St_bsmdeMap_Table.h"
 #include "tables/St_bsmdpMap_Table.h"
 
-ClassImp(StEmcMappingDb)
+ClassImp(StEmcMappingDb);
 
+StEmcMappingDb* StEmcMappingDb::mInstance = NULL;
+    
 StEmcMappingDb::StEmcMappingDb(int date, int time) : mBemcTTable(NULL),
     mBprsTTable(NULL), mSmdeTTable(NULL), mSmdpTTable(NULL), mBemcValidity(-2),
     mBprsValidity(-2), mSmdeValidity(-2), mSmdpValidity(-2), mBemcTable(NULL),
@@ -74,6 +76,11 @@ StEmcMappingDb::~StEmcMappingDb() {
     // memory, since the StDbTables already own it.  I don't want to copy the
     // data because it's ~6 MB or so.  Each TTable only has 2 Long_ts and an
     // Int_t; I think this should be OK.
+}
+
+StEmcMappingDb* StEmcMappingDb::instance() {
+    if(!mInstance) mInstance = new StEmcMappingDb();
+    return mInstance;
 }
 
 void StEmcMappingDb::SetDateTime(int date, int time) {

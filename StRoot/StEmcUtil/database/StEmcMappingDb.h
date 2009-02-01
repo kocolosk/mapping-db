@@ -36,6 +36,8 @@ public:
     StEmcMappingDb(int date=20330101, int time=0);
     virtual ~StEmcMappingDb();
     
+    static StEmcMappingDb* instance();
+    
     /// St_db_Maker-compatible interface
     void SetDateTime(int date, int time);
     void SetFlavor(const char *flavor, const char *tablename=NULL);
@@ -64,6 +66,8 @@ public:
     int softIdFromRDO(StDetectorId det, int rdo, int channel) const;
 
 private:
+    static StEmcMappingDb* mInstance;
+    
     // DB tables provided by St_db_Maker -- prefer to use these
     mutable St_bemcMap  *mBemcTTable;
     mutable St_bprsMap  *mBprsTTable;

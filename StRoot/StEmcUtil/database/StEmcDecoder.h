@@ -29,7 +29,9 @@ The current id's definitions are:<br>
 #define StEmcDecoder_HH
 
 #include "TObject.h"
-#include "StEmcMappingDb.h"
+#include "TDatime.h"
+
+class StEmcMappingDb;
 
 class StEmcDecoder : public TObject
 {
@@ -95,7 +97,7 @@ private:
     bool mTowerMapBug;
     int TowerBugFixIndex[4800];
     int PreshowerBugFixIndex[4800];
-    StEmcMappingDb mapping;
+    StEmcMappingDb* mapping;
     
     ClassDef(StEmcDecoder,1)
 };

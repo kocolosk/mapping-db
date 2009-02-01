@@ -8,10 +8,13 @@
 #endif
 #include "StMessMgr.h"
 
+#include "StEmcMappingDb.h"
+
 ClassImp(StEmcDecoder)
 
-StEmcDecoder::StEmcDecoder(unsigned date, unsigned time, bool TowerMapBug) : 
-  mapping(date, time) {
+StEmcDecoder::StEmcDecoder(unsigned date, unsigned time, bool TowerMapBug) {
+    mapping = StEmcMappingDb::instance();
+    
     mTowerMapBug = TowerMapBug; // unused
     
     // tower swap fixes applied only at analysis level
@@ -47,7 +50,7 @@ StEmcDecoder::StEmcDecoder(unsigned date, unsigned time, bool TowerMapBug) :
 StEmcDecoder::~StEmcDecoder() { }
 
 void StEmcDecoder::SetDateTime(unsigned int date, unsigned int time) {
-    mapping.SetDateTime(date, time);
+    mapping->SetDateTime(date, time);
 }
 
 bool StEmcDecoder::GetFixTowerMapBug(void) const {
@@ -94,9 +97,9 @@ Copy of StEmcGeom version
 int StEmcDecoder::
 GetTowerBin(const int TowerId,int &module,int &eta,int &sub) const {
     if(TowerId<1 || TowerId>4800) return 0;
-    module = mapping.bemc(TowerId).m;
-    eta = mapping.bemc(TowerId).e;
-    sub = mapping.bemc(TowerId).s;
+    module = mapping->bemc(TowerId).m;
+    eta = mapping->bemc(TowerId).e;
+    sub = mapping->bemc(TowerId).s;
     return 1;
 }
 
@@ -106,8 +109,8 @@ GetTowerBin(const int TowerId,int &module,int &eta,int &sub) const {
 */
 int StEmcDecoder::GetTowerCrateFromTDC(int TDC, int& crate) const {
     if(TDC<0 || TDC>29) return 0;
-    short id = mapping.softIdFromTDC(kBarrelEmcTowerId, TDC, 0);
-    crate = mapping.bemc(id).crate;
+    short id = mapping->softIdFromTDC(kBarrelEmcTowerId, TDC, 0);
+    crate = mapping->bemc(id).crate;
     return 1;
 }
 
@@ -117,8 +120,8 @@ int StEmcDecoder::GetTowerCrateFromTDC(int TDC, int& crate) const {
 */
 int StEmcDecoder::GetTowerTDCFromCrate(int crate, int& TDC) const {
     if(crate<1 || crate>30) return 0;
-    short id = mapping.softIdFromCrate(kBarrelEmcTowerId, crate, 0);
-    TDC = mapping.bemc(id).TDC;
+    short id = mapping->softIdFromCrate(kBarrelEmcTowerId, crate, 0);
+    TDC = mapping->bemc(id).TDC;
     return 1;
 }
 
@@ -128,8 +131,8 @@ int StEmcDecoder::GetTowerTDCFromCrate(int crate, int& TDC) const {
 */
 int StEmcDecoder::GetTowerTDCFromDaqId(int RDO, int& TDC) const {
     short id;
-    if((id = mapping.softIdFromDaqId(kBarrelEmcTowerId, RDO))) {
-        TDC = mapping.bemc(id).TDC;
+    if((id = mapping->softIdFromDaqId(kBarrelEmcTowerId, RDO))) {
+        TDC = mapping->bemc(id).TDC;
         return 1; 
     }
     return 0;
@@ -143,9 +146,9 @@ int StEmcDecoder::GetTowerTDCFromDaqId(int RDO, int& TDC) const {
 int StEmcDecoder::
 GetTowerCrateFromDaqId(int RDO, int& crate, int& crate_sequency) const {
     short id;
-    if((id = mapping.softIdFromDaqId(kBarrelEmcTowerId, RDO))) {
-        crate = mapping.bemc(id).crate;
-        crate_sequency = mapping.bemc(id).crateChannel;
+    if((id = mapping->softIdFromDaqId(kBarrelEmcTowerId, RDO))) {
+        crate = mapping->bemc(id).crate;
+        crate_sequency = mapping->bemc(id).crateChannel;
         return 1; 
     }
     return 0;
@@ -157,7 +160,7 @@ GetTowerCrateFromDaqId(int RDO, int& crate, int& crate_sequency) const {
 */
 int StEmcDecoder::GetTowerIdFromDaqId(int RDO,int& TowerId) const {
     short id;
-    if((id = mapping.softIdFromDaqId(kBarrelEmcTowerId, RDO))) {
+    if((id = mapping->softIdFromDaqId(kBarrelEmcTowerId, RDO))) {
         TowerId = id;
         return 1; 
     }
@@ -170,7 +173,7 @@ int StEmcDecoder::GetTowerIdFromDaqId(int RDO,int& TowerId) const {
 */
 int StEmcDecoder::GetDaqIdFromTowerId(int TowerId,int& RDO) const {
     if(TowerId<1 || TowerId >4800) return 0;
-    RDO = mapping.bemc(TowerId).daqID;
+    RDO = mapping->bemc(TowerId).daqID;
     return 1;
 }
 
@@ -183,7 +186,7 @@ int StEmcDecoder::
 GetTowerIdFromCrate(int crate,int crate_sequency, int& TowerId) const {
     if(crate < 1 || crate > 30) return 0;
     if(crate_sequency < 0 || crate_sequency > 159) return 0;
-    TowerId = mapping.softIdFromCrate(kBarrelEmcTowerId, crate, crate_sequency);
+    TowerId = mapping->softIdFromCrate(kBarrelEmcTowerId, crate, crate_sequency);
     return 1;
 }
 
@@ -196,7 +199,7 @@ int StEmcDecoder::
 GetTowerIdFromTDC(int TDC,int tdc_sequency, int& TowerId) const {
     if(TDC < 0 || TDC > 29) return 0;
     if(tdc_sequency < 0 || tdc_sequency > 159) return 0;
-    TowerId = mapping.softIdFromCrate(kBarrelEmcTowerId, TDC, tdc_sequency);
+    TowerId = mapping->softIdFromCrate(kBarrelEmcTowerId, TDC, tdc_sequency);
     return 1;
 }
 
@@ -209,8 +212,8 @@ int StEmcDecoder::
 GetTriggerPatchFromCrate(int CRATE,int crate_seq, int& patchId) const {
     if(CRATE < 1 || CRATE > 30) return 0;
     if(crate_seq < 0 || crate_seq > 159) return 0;
-    short id = mapping.softIdFromCrate(kBarrelEmcTowerId, CRATE, crate_seq);
-    patchId = mapping.bemc(id).triggerPatch;
+    short id = mapping->softIdFromCrate(kBarrelEmcTowerId, CRATE, crate_seq);
+    patchId = mapping->bemc(id).triggerPatch;
     return 1;
 }
 
@@ -223,8 +226,8 @@ int StEmcDecoder::
 GetCrateAndSequenceFromTriggerPatch(int PATCH,int& CRATE,int& crate_seq) const {
     if(PATCH<0 || PATCH>299) return 0;
     for(int id=1; id<=4800; id++) {
-        if(mapping.bemc(id).triggerPatch == PATCH) {
-            CRATE = mapping.bemc(id).crate;
+        if(mapping->bemc(id).triggerPatch == PATCH) {
+            CRATE = mapping->bemc(id).crate;
             crate_seq = (PATCH%10)*16;
         }
     }
@@ -241,8 +244,8 @@ int StEmcDecoder::GetTriggerPatchFromJetPatch(int jetPatch, int jetPatch_seq,
 {
     if(jetPatch<0 || jetPatch>11) return 0;
     for(int id=1; id<=4800; id++) {
-        if(mapping.bemc(id).jetPatch == jetPatch) {
-            triggerPatch = mapping.bemc(id).triggerPatch;
+        if(mapping->bemc(id).jetPatch == jetPatch) {
+            triggerPatch = mapping->bemc(id).triggerPatch;
         }
     }
     // if (jetPatch<0 || jetPatch>=12 || jetPatch_seq<0 || jetPatch_seq>=25)
@@ -261,8 +264,8 @@ int StEmcDecoder::GetJetPatchAndSequenceFromTriggerPatch(int triggerPatch,
 {
     if (triggerPatch<0 || triggerPatch>299) return 0;
     for(int id=1; id<=4800; id++) {
-        if(mapping.bemc(id).triggerPatch == triggerPatch) {
-            jetPatch = mapping.bemc(id).jetPatch;
+        if(mapping->bemc(id).triggerPatch == triggerPatch) {
+            jetPatch = mapping->bemc(id).jetPatch;
         }
     }
     // jetPatch_seq = JetPatchSeqFromTriggerPatch[triggerPatch];
@@ -297,15 +300,15 @@ int StEmcDecoder::GetSmdRDO(int detector, int module, int eta, int sub,
     int& RDO, int& index) const 
 {
     if(detector == 3) {
-        int id = mapping.softIdFromMES(kBarrelSmdEtaStripId, module, eta, sub);
-        RDO = mapping.bsmde(id).rdo;
-        index = mapping.bsmde(id).rdoChannel;
+        int id = mapping->softIdFromMES(kBarrelSmdEtaStripId, module, eta, sub);
+        RDO = mapping->bsmde(id).rdo;
+        index = mapping->bsmde(id).rdoChannel;
         return 1;
     }
     else if(detector == 4) {
-        int id = mapping.softIdFromMES(kBarrelSmdPhiStripId, module, eta, sub);
-        RDO = mapping.bsmdp(id).rdo;
-        index = mapping.bsmdp(id).rdoChannel;
+        int id = mapping->softIdFromMES(kBarrelSmdPhiStripId, module, eta, sub);
+        RDO = mapping->bsmdp(id).rdo;
+        index = mapping->bsmdp(id).rdoChannel;
         return 1;
     }
     return 0;
@@ -342,22 +345,22 @@ int StEmcDecoder::GetSmdCoord(int RDO, int index, int& det, int& m, int& e,
     int& s, int& wire, int& A_value, bool print) const 
 {
     short id;
-    if((id = mapping.softIdFromRDO(kBarrelSmdEtaStripId, RDO, index))) {
+    if((id = mapping->softIdFromRDO(kBarrelSmdEtaStripId, RDO, index))) {
         det = 3;
-        m = mapping.bsmde(id).m;
-        e = mapping.bsmde(id).e;
-        s = mapping.bsmde(id).s;
-        wire = mapping.bsmde(id).wire;
-        A_value = mapping.bsmde(id).feeA;
+        m = mapping->bsmde(id).m;
+        e = mapping->bsmde(id).e;
+        s = mapping->bsmde(id).s;
+        wire = mapping->bsmde(id).wire;
+        A_value = mapping->bsmde(id).feeA;
         return 1;
     }
-    else if((id = mapping.softIdFromRDO(kBarrelSmdPhiStripId, RDO, index))) {
+    else if((id = mapping->softIdFromRDO(kBarrelSmdPhiStripId, RDO, index))) {
         det = 4;
-        m = mapping.bsmdp(id).m;
-        e = mapping.bsmdp(id).e;
-        s = mapping.bsmdp(id).s;
-        wire = mapping.bsmdp(id).wire;
-        A_value = mapping.bsmdp(id).feeA;
+        m = mapping->bsmdp(id).m;
+        e = mapping->bsmdp(id).e;
+        s = mapping->bsmdp(id).s;
+        wire = mapping->bsmdp(id).wire;
+        A_value = mapping->bsmdp(id).feeA;
         return 1;
     }
     return 0;
@@ -392,10 +395,10 @@ the same decoder.
 int StEmcDecoder::GetPsdId(int RDO,int index, int& softId, int& PMTBox, 
     int& wire, int& A_value, bool print) const
 {
-    if((softId = mapping.softIdFromRDO(kBarrelEmcPreShowerId, RDO, index))) {
-        PMTBox = mapping.bprs(softId).PMTbox;
-        wire = mapping.bprs(softId).wire;
-        A_value = mapping.bprs(softId).feeA;
+    if((softId = mapping->softIdFromRDO(kBarrelEmcPreShowerId, RDO, index))) {
+        PMTBox = mapping->bprs(softId).PMTbox;
+        wire = mapping->bprs(softId).wire;
+        A_value = mapping->bprs(softId).feeA;
         return 1;
     }
     return 0;
@@ -408,8 +411,8 @@ int StEmcDecoder::GetPsdId(int RDO,int index, int& softId, int& PMTBox,
 */
 int StEmcDecoder::GetPsdRDO(int id, int& RDO,int& index) const {
     if(id<1 || id>4800) return 0;
-    RDO = mapping.bprs(id).rdo;
-    index = mapping.bprs(id).rdoChannel;
+    RDO = mapping->bprs(id).rdo;
+    index = mapping->bprs(id).rdoChannel;
     return 1;
 }
 
@@ -500,26 +503,26 @@ void StEmcDecoder::PrintPsdMap(ofstream *out) const {
 
 int StEmcDecoder::GetCrateFromTowerId(int softId, int &crate, int &seq) const {
     if(softId<1 || softId>4800) return 0;
-    crate = mapping.bemc(softId).crate;
-    seq = mapping.bemc(softId).crateChannel;
+    crate = mapping->bemc(softId).crate;
+    seq = mapping->bemc(softId).crateChannel;
     return 1;
 }
 
 int StEmcDecoder::GetTDCFromTowerId(int softId, int &TDC) const {
     if(softId<1 || softId>4800) return 0;
-    TDC = mapping.bemc(softId).TDC;
+    TDC = mapping->bemc(softId).TDC;
     return 1;
 }
 
 int StEmcDecoder::GetTriggerPatchFromTowerId(int softId, int &patchId) const {
     if(softId<1 || softId>4800) return 0;
-    patchId = mapping.bemc(softId).triggerPatch;
+    patchId = mapping->bemc(softId).triggerPatch;
     return 1;
 }
 
 int StEmcDecoder::GetJetPatchFromTowerId(int softId, int &jetPatch) const {
     if(softId<1 || softId>4800) return 0;
-    jetPatch = mapping.bemc(softId).jetPatch;
+    jetPatch = mapping->bemc(softId).jetPatch;
     return 1;
 }
 
@@ -527,7 +530,7 @@ int StEmcDecoder::GetTowerIdFromBin(int m, int e, int s, int &softId) const {
     if( (m<1) || (m>120) ) return 0;
     if( (e<1) || (e>20)  ) return 0;
     if( (s<1) || (s>2)   ) return 0;
-    softId = mapping.softIdFromMES(kBarrelEmcTowerId, m, e, s);
+    softId = mapping->softIdFromMES(kBarrelEmcTowerId, m, e, s);
     return 1;
 }
 

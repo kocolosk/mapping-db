@@ -19,9 +19,9 @@ ClassImp(StEmcMappingDb)
 
 StEmcMappingDb::StEmcMappingDb(int date, int time) : mBemcTTable(NULL),
     mBprsTTable(NULL), mSmdeTTable(NULL), mSmdpTTable(NULL), mBemcValidity(-2),
-    mBprsValidity(-2), mSmdeValidity(-2), mSmdpValidity(-2), mEventNumber(-1),
-    mBemcTable(NULL), mBprsTable(NULL), mSmdeTable(NULL), mSmdpTable(NULL),
-    mBemcDirty(true), mBprsDirty(true), mSmdeDirty(true), mSmdpDirty(true)
+    mBprsValidity(-2), mSmdeValidity(-2), mSmdpValidity(-2), mBemcTable(NULL),
+    mBprsTable(NULL), mSmdeTable(NULL), mSmdpTable(NULL), mBemcDirty(true),
+    mBprsDirty(true), mSmdeDirty(true), mSmdpDirty(true)
 {
     mChain = StMaker::GetChain();
     
@@ -272,7 +272,6 @@ StEmcMappingDb::softIdFromCrate(StDetectorId det, int crate, int channel) const 
 int 
 StEmcMappingDb::softIdFromDaqId(StDetectorId det, int daqID) const {
     if(det == kBarrelEmcTowerId) {
-        maybe_reset_cache(det);
         const bemcMap_st* map = bemc();
         if(!mCacheDaqId[daqID]) {
             for(int i=0; i<4800; ++i) {
@@ -282,7 +281,14 @@ StEmcMappingDb::softIdFromDaqId(StDetectorId det, int daqID) const {
                 }
             }
         }
-        return mCacheDaqId[daqID];
+        
+        // confirm that cache is still valid
+        if(map[mCacheDaqId[daqID]-1].daqID == daqID) {
+            return mCacheDaqId[daqID];
+        } else {
+            reset_bemc_cache();
+            return softIdFromDaqId(det, daqID);
+        }
     }
     return 0;
 }
@@ -302,7 +308,7 @@ StEmcMappingDb::softIdFromTDC(StDetectorId det, int TDC, int channel) const {
 
 int 
 StEmcMappingDb::softIdFromRDO(StDetectorId det, int rdo, int channel) const {
-    maybe_reset_cache(det);
+    short id;
     switch(det) {
         case kBarrelEmcPreShowerId:
         const bprsMap_st* prs = bprs();
@@ -310,13 +316,32 @@ StEmcMappingDb::softIdFromRDO(StDetectorId det, int rdo, int channel) const {
             for(int i=0; i<4800; i++) {
                 if(prs[i].rdo == rdo && prs[i].rdoChannel == channel) {
                     mCacheBprsRdo[rdo][channel] = i+1;
-                    break;
+                    return i+1;
                 }
             }
         }
-        // we didn't find a match, it must be an empty channel
-        if(mCacheBprsRdo[rdo][channel] == -1) mCacheBprsRdo[rdo][channel] = 0;
-        return mCacheBprsRdo[rdo][channel];
+
+        switch((id = mCacheBprsRdo[rdo][channel])) {
+            // didn't find it on a linear search, must be empty channel
+            case -1:
+            mCacheBprsRdo[rdo][channel] = 0;
+            return 0;
+            
+            // confirm cache validity
+            case 0:
+            if(maybe_reset_cache(kBarrelEmcPreShowerId)) 
+                return softIdFromRDO(det, rdo, channel);
+            else return 0;
+            
+            default:
+            if(prs[id-1].rdo == rdo && prs[id-1].rdoChannel == channel) {
+                return id;
+            } else {
+                reset_bprs_cache();
+                return softIdFromRDO(det, rdo, channel);
+            }
+        }
+        
         
         case kBarrelSmdEtaStripId:
         const bsmdeMap_st *smde = bsmde();
@@ -324,13 +349,32 @@ StEmcMappingDb::softIdFromRDO(StDetectorId det, int rdo, int channel) const {
             for(int i=0; i<18000; i++) {
                 if(smde[i].rdo == rdo && smde[i].rdoChannel == channel) {
                     mCacheSmdeRdo[rdo][channel] = i+1;
-                    break;
+                    return i+1;
                 }
             }
         }
-        // we didn't find a match, it must be an empty channel or phi plane
-        if(mCacheSmdeRdo[rdo][channel] == -1) mCacheSmdeRdo[rdo][channel] = 0;
-        return mCacheSmdeRdo[rdo][channel];
+        
+        switch((id = mCacheSmdeRdo[rdo][channel])) {
+            // didn't find it on a linear search, must be empty channel
+            case -1:
+            mCacheSmdeRdo[rdo][channel] = 0;
+            return 0;
+            
+            // confirm cache validity
+            case 0:
+            if(maybe_reset_cache(kBarrelSmdEtaStripId)) 
+                return softIdFromRDO(det, rdo, channel);
+            else return 0;
+            
+            default:
+            if(smde[id-1].rdo == rdo && smde[id-1].rdoChannel == channel) {
+                return id;
+            } else {
+                reset_smde_cache();
+                return softIdFromRDO(det, rdo, channel);
+            }
+        }
+        
         
         case kBarrelSmdPhiStripId:
         const bsmdpMap_st *smdp = bsmdp();
@@ -338,13 +382,31 @@ StEmcMappingDb::softIdFromRDO(StDetectorId det, int rdo, int channel) const {
             for(int i=0; i<18000; i++) {
                 if(smdp[i].rdo == rdo && smdp[i].rdoChannel == channel) {
                     mCacheSmdpRdo[rdo][channel] = i+1;
-                    break;
+                    return i+1;
                 }
             }
         }
-        // we didn't find a match, it must be an empty channel or eta plane
-        if(mCacheSmdpRdo[rdo][channel] == -1) mCacheSmdpRdo[rdo][channel] = 0;
-        return mCacheSmdpRdo[rdo][channel];
+        
+        switch((id = mCacheSmdpRdo[rdo][channel])) {
+            // didn't find it on a linear search, must be empty channel
+            case -1:
+            mCacheSmdpRdo[rdo][channel] = 0;
+            return 0;
+            
+            // confirm cache validity
+            case 0:
+            if(maybe_reset_cache(kBarrelSmdPhiStripId)) 
+                return softIdFromRDO(det, rdo, channel);
+            else return 0;
+            
+            default:
+            if(smdp[id-1].rdo == rdo && smdp[id-1].rdoChannel == channel) {
+                return id;
+            } else {
+                reset_smdp_cache();
+                return softIdFromRDO(det, rdo, channel);
+            }
+        }
         
         default: break;
     }
@@ -412,9 +474,9 @@ void StEmcMappingDb::reload_dbtable(StDbTable* table) const {
     mgr->fetchDbTable(table);
 }
 
-void StEmcMappingDb::maybe_reset_cache(StDetectorId det) const {
+bool StEmcMappingDb::maybe_reset_cache(StDetectorId det) const {
     // caches are proactively reset when flipping dirty flags, so ...
-    if(!mChain) return;
+    if(!mChain) return false;
     
     Int_t version;
     switch(det) {
@@ -422,6 +484,7 @@ void StEmcMappingDb::maybe_reset_cache(StDetectorId det) const {
         if((version = mChain->GetValidity(mBemcTTable,NULL)) != mBemcValidity) {
             mBemcValidity = version;
             reset_bemc_cache();
+            return true;
         }
         break;
         
@@ -429,6 +492,7 @@ void StEmcMappingDb::maybe_reset_cache(StDetectorId det) const {
         if((version = mChain->GetValidity(mBprsTTable,NULL)) != mBprsValidity) {
             mBprsValidity = version;
             reset_bprs_cache();
+            return true;
         }
         break;
         
@@ -436,6 +500,7 @@ void StEmcMappingDb::maybe_reset_cache(StDetectorId det) const {
         if((version = mChain->GetValidity(mSmdeTTable,NULL)) != mSmdeValidity) {
             mSmdeValidity = version;
             reset_smde_cache();
+            return true;
         }
         break;
         
@@ -443,9 +508,11 @@ void StEmcMappingDb::maybe_reset_cache(StDetectorId det) const {
         if((version = mChain->GetValidity(mSmdpTTable,NULL)) != mSmdpValidity) {
             mSmdpValidity = version;
             reset_smdp_cache();
+            return true;
         }
         default: break;
     }
+    return false;
 }
 
 void StEmcMappingDb::reset_bemc_cache() const {

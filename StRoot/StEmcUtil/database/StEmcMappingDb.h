@@ -95,6 +95,8 @@ private:
     TDatime         mBeginTime;
     void            maybe_reload(StDetectorId) const;
     void            reload_dbtable(StDbTable*) const;
+    
+    void            maybe_reset_cache(StDetectorId det) const;
     void            reset_bemc_cache() const;
     void            reset_bprs_cache() const;
     void            reset_smde_cache() const;

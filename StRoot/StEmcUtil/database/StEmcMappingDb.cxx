@@ -19,9 +19,9 @@ ClassImp(StEmcMappingDb)
 
 StEmcMappingDb::StEmcMappingDb(int date, int time) : mBemcTTable(NULL),
     mBprsTTable(NULL), mSmdeTTable(NULL), mSmdpTTable(NULL), mBemcValidity(-2),
-    mBprsValidity(-2), mSmdeValidity(-2), mSmdpValidity(-2), mBemcTable(NULL),
-    mBprsTable(NULL), mSmdeTable(NULL), mSmdpTable(NULL), mBemcDirty(true),
-    mBprsDirty(true), mSmdeDirty(true), mSmdpDirty(true)
+    mBprsValidity(-2), mSmdeValidity(-2), mSmdpValidity(-2), mEventNumber(-1),
+    mBemcTable(NULL), mBprsTable(NULL), mSmdeTable(NULL), mSmdpTable(NULL),
+    mBemcDirty(true), mBprsDirty(true), mSmdeDirty(true), mSmdpDirty(true)
 {
     mChain = StMaker::GetChain();
     
@@ -272,6 +272,7 @@ StEmcMappingDb::softIdFromCrate(StDetectorId det, int crate, int channel) const 
 int 
 StEmcMappingDb::softIdFromDaqId(StDetectorId det, int daqID) const {
     if(det == kBarrelEmcTowerId) {
+        maybe_reset_cache(det);
         const bemcMap_st* map = bemc();
         if(!mCacheDaqId[daqID]) {
             for(int i=0; i<4800; ++i) {
@@ -301,6 +302,7 @@ StEmcMappingDb::softIdFromTDC(StDetectorId det, int TDC, int channel) const {
 
 int 
 StEmcMappingDb::softIdFromRDO(StDetectorId det, int rdo, int channel) const {
+    maybe_reset_cache(det);
     switch(det) {
         case kBarrelEmcPreShowerId:
         const bprsMap_st* prs = bprs();
@@ -408,6 +410,42 @@ void StEmcMappingDb::reload_dbtable(StDbTable* table) const {
     mgr->setVerbose(false);
     mgr->setRequestTime(mBeginTime.AsSQLString());
     mgr->fetchDbTable(table);
+}
+
+void StEmcMappingDb::maybe_reset_cache(StDetectorId det) const {
+    // caches are proactively reset when flipping dirty flags, so ...
+    if(!mChain) return;
+    
+    Int_t version;
+    switch(det) {
+        case kBarrelEmcTowerId:
+        if((version = mChain->GetValidity(mBemcTTable,NULL)) != mBemcValidity) {
+            mBemcValidity = version;
+            reset_bemc_cache();
+        }
+        break;
+        
+        case kBarrelEmcPreShowerId:
+        if((version = mChain->GetValidity(mBprsTTable,NULL)) != mBprsValidity) {
+            mBprsValidity = version;
+            reset_bprs_cache();
+        }
+        break;
+        
+        case kBarrelSmdEtaStripId:
+        if((version = mChain->GetValidity(mSmdeTTable,NULL)) != mSmdeValidity) {
+            mSmdeValidity = version;
+            reset_smde_cache();
+        }
+        break;
+        
+        case kBarrelSmdPhiStripId:
+        if((version = mChain->GetValidity(mSmdpTTable,NULL)) != mSmdpValidity) {
+            mSmdpValidity = version;
+            reset_smdp_cache();
+        }
+        default: break;
+    }
 }
 
 void StEmcMappingDb::reset_bemc_cache() const {

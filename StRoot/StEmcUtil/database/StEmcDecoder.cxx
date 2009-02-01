@@ -105,13 +105,10 @@ GetTowerBin(const int TowerId,int &module,int &eta,int &sub) const {
 \param crate is the crate number
 */
 int StEmcDecoder::GetTowerCrateFromTDC(int TDC, int& crate) const {
-    for(int id=1; id<=4800; id++) {
-        if(mapping.bemc(id).TDC == TDC) {
-            crate = mapping.bemc(id).crate;
-            return 1;
-        }
-    }
-    return 0;
+    if(TDC<0 || TDC>29) return 0;
+    short id = mapping.softIdFromTDC(kBarrelEmcTowerId, TDC, 0);
+    crate = mapping.bemc(id).crate;
+    return 1;
 }
 
 /*!
@@ -119,13 +116,10 @@ int StEmcDecoder::GetTowerCrateFromTDC(int TDC, int& crate) const {
 \param TDC is the TDC channel number
 */
 int StEmcDecoder::GetTowerTDCFromCrate(int crate, int& TDC) const {
-    for(int id=1; id<=4800; id++) {
-        if(mapping.bemc(id).crate == crate) {
-            TDC = mapping.bemc(id).TDC;
-            return 1;
-        }
-    }
-    return 0;
+    if(crate<1 || crate>30) return 0;
+    short id = mapping.softIdFromCrate(kBarrelEmcTowerId, crate, 0);
+    TDC = mapping.bemc(id).TDC;
+    return 1;
 }
 
 /*!
@@ -187,15 +181,10 @@ int StEmcDecoder::GetDaqIdFromTowerId(int TowerId,int& RDO) const {
 */
 int StEmcDecoder::
 GetTowerIdFromCrate(int crate,int crate_sequency, int& TowerId) const {
-    for(int id=1; id<=4800; id++) {
-        if(mapping.bemc(id).crate == crate) {
-            if(mapping.bemc(id).crateChannel == crate_sequency) {
-                TowerId = id;
-                return 1;                
-            }
-        }
-    }
-    return 0;
+    if(crate < 1 || crate > 30) return 0;
+    if(crate_sequency < 0 || crate_sequency > 159) return 0;
+    TowerId = mapping.softIdFromCrate(kBarrelEmcTowerId, crate, crate_sequency);
+    return 1;
 }
 
 /*!
@@ -205,15 +194,10 @@ GetTowerIdFromCrate(int crate,int crate_sequency, int& TowerId) const {
 */
 int StEmcDecoder::
 GetTowerIdFromTDC(int TDC,int tdc_sequency, int& TowerId) const {
-    for(int id=1; id<=4800; id++) {
-        if(mapping.bemc(id).TDC == TDC) {
-            if(mapping.bemc(id).crateChannel == tdc_sequency) {
-                TowerId = id;
-                return 1;                
-            }
-        }
-    }
-    return 0;
+    if(TDC < 0 || TDC > 29) return 0;
+    if(tdc_sequency < 0 || tdc_sequency > 159) return 0;
+    TowerId = mapping.softIdFromCrate(kBarrelEmcTowerId, TDC, tdc_sequency);
+    return 1;
 }
 
 /*!
@@ -223,15 +207,11 @@ GetTowerIdFromTDC(int TDC,int tdc_sequency, int& TowerId) const {
 */
 int StEmcDecoder::
 GetTriggerPatchFromCrate(int CRATE,int crate_seq, int& patchId) const {
-    for(int id=1; id<=4800; id++) {
-        if(mapping.bemc(id).crate == CRATE) {
-            if(mapping.bemc(id).crateChannel == crate_seq) {
-                patchId = mapping.bemc(id).triggerPatch;
-                return 1;                
-            }
-        }
-    }
-    return 0;
+    if(CRATE < 1 || CRATE > 30) return 0;
+    if(crate_seq < 0 || crate_seq > 159) return 0;
+    short id = mapping.softIdFromCrate(kBarrelEmcTowerId, CRATE, crate_seq);
+    patchId = mapping.bemc(id).triggerPatch;
+    return 1;
 }
 
 /*!

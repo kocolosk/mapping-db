@@ -55,12 +55,12 @@ public:
     
     int softIdFromMES(StDetectorId det, int m, int e, int s) const;
     
-    // these 3 will crash if det != kBarrelEmcTowerId
+    // these are for towers
     int softIdFromCrate(StDetectorId det, int crate, int channel) const;
     int softIdFromDaqId(StDetectorId det, int daqId) const;
     int softIdFromTDC(StDetectorId det, int TDC, int channel) const;
     
-    // this will crash if det == kBarrelEmcTowerId
+    // this is for SMD/PRS
     int softIdFromRDO(StDetectorId det, int rdo, int channel) const;
 
 private:
@@ -100,7 +100,9 @@ private:
     void reset_smde_cache() const;
     void reset_smdp_cache() const;
     
+    mutable short mCacheCrate[30][160];
     mutable short mCacheDaqId[4800];
+    mutable short mCacheTDC[30][160];
     mutable short mCacheBprsRdo[4][4800];
     mutable short mCacheSmdRdo[8][4800];
     

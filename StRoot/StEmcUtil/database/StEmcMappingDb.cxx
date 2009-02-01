@@ -78,7 +78,7 @@ StEmcMappingDb::~StEmcMappingDb() {
 
 void StEmcMappingDb::SetDateTime(int date, int time) {
     if(mChain) {
-        LOG_ERROR << "StEmcMappingDb::SetDateTime is illegal in a chain" << endm;
+        LOG_DEBUG << "StEmcMappingDb::SetDateTime is illegal in a chain" << endm;
     }
     else {
         mBeginTime.Set(date, time);
@@ -104,7 +104,7 @@ void StEmcMappingDb::SetDateTime(int date, int time) {
 
 void StEmcMappingDb::SetFlavor(const char *flavor, const char *tablename) {
     if(mChain) {
-        LOG_ERROR << "StEmcMappingDb::SetFlavor is illegal in a chain" << endm;
+        LOG_DEBUG << "StEmcMappingDb::SetFlavor is illegal in a chain" << endm;
     }
     else {
         if(!tablename || !strcmp(tablename, "bemcMap"))  {
@@ -140,7 +140,7 @@ void StEmcMappingDb::SetFlavor(const char *flavor, const char *tablename) {
 
 void StEmcMappingDb::SetMaxEntryTime(int date, int time) {
     if(mChain) {
-        LOG_ERROR << "StEmcMappingDb::SetMaxEntryTime is illegal in a chain" << endm;
+        LOG_DEBUG << "StEmcMappingDb::SetMaxEntryTime is illegal in a chain" << endm;
     }
     else {
         unsigned unixMax = TUnixTime::Convert(TDatime(date,time), true);
@@ -195,36 +195,15 @@ int
 StEmcMappingDb::softIdFromMES(StDetectorId det, int m, int e, int s) const {
     switch(det) {
         case kBarrelEmcTowerId:
-        const bemcMap_st* tow = bemc();
-        for(int i=0; i<4800; i++) {
-            if(tow[i].m == m && tow[i].e == e && tow[i].s == s) {
-                return i+1;
-            }
-        }
-        break;
         case kBarrelEmcPreShowerId:
-        const bprsMap_st* prs = bprs();
-        for(int i=0; i<4800; i++) {
-            if(prs[i].m == m && prs[i].e == e && prs[i].s == s) {
-                return i+1;
-            }
-        }
-        break;
+        return 40*(m-1) + 20*(s-1) + e;
+        
         case kBarrelSmdEtaStripId:
-        const bsmdeMap_st* smde = bsmde();
-        for(int i=0; i<18000; i++) {
-            if(smde[i].m == m && smde[i].e == e && smde[i].s == s) {
-                return i+1;
-            }
-        }
-        break;
+        return 150*(m-1) + 150*(s-1) + e;
+        
         case kBarrelSmdPhiStripId:
-        const bsmdpMap_st* smdp = bsmdp();
-        for(int i=0; i<18000; i++) {
-            if(smdp[i].m == m && smdp[i].e == e && smdp[i].s == s) {
-                return i+1;
-            }
-        }
+        return 150*(m-1) + 10*(s-1) + e;
+        
         default: break;
     }
     return 0;
@@ -234,11 +213,19 @@ int
 StEmcMappingDb::softIdFromCrate(StDetectorId det, int crate, int channel) const {
     if(det == kBarrelEmcTowerId) {
         const bemcMap_st* map = bemc();
-        for(int i=0; i<4800; i++) {
-            if(map[i].crate == crate) {
-                if(map[i].crateChannel == channel) 
-                    return i+1;
+        if(!mCacheCrate[crate-1][channel]) {
+            for(int i=0; i<4800; ++i) {
+                mCacheCrate[map[i].crate-1][map[i].crateChannel] = i+1;
             }
+        }
+        
+        // confirm that cache is still valid
+        short id = mCacheCrate[crate-1][channel];
+        if(map[id-1].crate == crate && map[id-1].crateChannel == channel) {
+            return id;
+        } else {
+            reset_bemc_cache();
+            return softIdFromCrate(det, crate, channel);
         }
     }
     return 0;
@@ -250,10 +237,7 @@ StEmcMappingDb::softIdFromDaqId(StDetectorId det, int daqID) const {
         const bemcMap_st* map = bemc();
         if(!mCacheDaqId[daqID]) {
             for(int i=0; i<4800; ++i) {
-                if(map[i].daqID == daqID) {
-                    mCacheDaqId[daqID] = i+1;
-                    break;
-                }
+                mCacheDaqId[map[i].daqID] = i+1;
             }
         }
         
@@ -272,10 +256,19 @@ int
 StEmcMappingDb::softIdFromTDC(StDetectorId det, int TDC, int channel) const {
     if(det == kBarrelEmcTowerId) {
         const bemcMap_st* map = bemc();
-        for(int i=0; i<4800; i++) {
-            if(map[i].TDC == TDC) {
-                if(map[i].crateChannel == channel) return i+1;
+        if(!mCacheTDC[TDC][channel]) {
+            for(int i=0; i<4800; ++i) {
+                mCacheTDC[map[i].TDC][map[i].crateChannel] = i+1;
             }
+        }
+        
+        // confirm that cache is still valid
+        short id = mCacheTDC[TDC][channel];
+        if(map[id-1].TDC == TDC && map[id-1].crateChannel == channel) {
+            return id;
+        } else {
+            reset_bemc_cache();
+            return softIdFromTDC(det, TDC, channel);
         }
     }
     return 0;
@@ -469,7 +462,9 @@ bool StEmcMappingDb::maybe_reset_cache(StDetectorId det) const {
 }
 
 void StEmcMappingDb::reset_bemc_cache() const {
+    memset(mCacheCrate, 0, sizeof(mCacheCrate));
     memset(mCacheDaqId, 0, sizeof(mCacheDaqId));
+    memset(mCacheTDC, 0, sizeof(mCacheTDC));
 }
 
 void StEmcMappingDb::reset_bprs_cache() const {

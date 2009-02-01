@@ -36,8 +36,6 @@ public:
     StEmcMappingDb(int date=20330101, int time=0);
     virtual ~StEmcMappingDb();
     
-    void Init();
-    
     /// St_db_Maker-compatible interface
     void SetDateTime(int date, int time);
     void SetFlavor(const char *flavor, const char *tablename=NULL);
@@ -67,40 +65,40 @@ public:
 
 private:
     // DB tables provided by St_db_Maker -- prefer to use these
-    mutable St_bemcMap      *mBemcTTable;
-    mutable St_bprsMap      *mBprsTTable;
-    mutable St_bsmdeMap     *mSmdeTTable;
-    mutable St_bsmdpMap     *mSmdpTTable;
+    mutable St_bemcMap  *mBemcTTable;
+    mutable St_bprsMap  *mBprsTTable;
+    mutable St_bsmdeMap *mSmdeTTable;
+    mutable St_bsmdpMap *mSmdpTTable;
     
     // version info from StMaker::GetValidity -- used to expire caches
-    mutable Int_t   mBemcValidity;
-    mutable Int_t   mBprsValidity;
-    mutable Int_t   mSmdeValidity;
-    mutable Int_t   mSmdpValidity;
+    mutable Int_t mBemcValidity;
+    mutable Int_t mBprsValidity;
+    mutable Int_t mSmdeValidity;
+    mutable Int_t mSmdpValidity;
     
     // DB tables provided by StDbManager in standalone mode
-    StDbTable       *mBemcTable;
-    StDbTable       *mBprsTable;
-    StDbTable       *mSmdeTable;
-    StDbTable       *mSmdpTable;
+    StDbTable *mBemcTable;
+    StDbTable *mBprsTable;
+    StDbTable *mSmdeTable;
+    StDbTable *mSmdpTable;
     
     // ensure caches expire if beginTime, flavor, or maxEntryTime changes
-    mutable bool    mBemcDirty;
-    mutable bool    mBprsDirty;
-    mutable bool    mSmdeDirty;
-    mutable bool    mSmdpDirty;
+    mutable bool mBemcDirty;
+    mutable bool mBprsDirty;
+    mutable bool mSmdeDirty;
+    mutable bool mSmdpDirty;
     
-    StMaker         *mChain;
+    StMaker *mChain;
     
-    TDatime         mBeginTime;
-    void            maybe_reload(StDetectorId) const;
-    void            reload_dbtable(StDbTable*) const;
+    TDatime mBeginTime;
+    void maybe_reload(StDetectorId) const;
+    void reload_dbtable(StDbTable*) const;
     
-    bool            maybe_reset_cache(StDetectorId det) const;
-    void            reset_bemc_cache() const;
-    void            reset_bprs_cache() const;
-    void            reset_smde_cache() const;
-    void            reset_smdp_cache() const;
+    bool maybe_reset_cache(StDetectorId det) const;
+    void reset_bemc_cache() const;
+    void reset_bprs_cache() const;
+    void reset_smde_cache() const;
+    void reset_smdp_cache() const;
     
     mutable short mCacheDaqId[4800];
     mutable short mCacheBprsRdo[4][4800];

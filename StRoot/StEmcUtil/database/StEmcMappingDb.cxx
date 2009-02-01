@@ -76,31 +76,6 @@ StEmcMappingDb::~StEmcMappingDb() {
     // Int_t; I think this should be OK.
 }
 
-void StEmcMappingDb::Init() {
-    if(!mChain) return;
-    LOG_DEBUG << "initializing StEmcMappingDb using St_db_Maker" << endm;
-    TDataSet *DB = mChain->GetInputDB("Calibrations/emc/map");
-    
-    Int_t version;
-    
-    if((version = mChain->GetValidity(mBemcTTable,NULL)) != mBemcValidity) {
-        mBemcValidity = version;
-        mBemcTTable = static_cast<St_bemcMap*>(DB->Find("bemcMap"));
-    }
-    if((version = mChain->GetValidity(mBprsTTable,NULL)) != mBprsValidity) {
-        mBprsValidity = version;
-        mBprsTTable = static_cast<St_bprsMap*>(DB->Find("bprsMap"));
-    }
-    if((version = mChain->GetValidity(mSmdeTTable,NULL)) != mSmdeValidity) {
-        mSmdeValidity = version;
-        mSmdeTTable = static_cast<St_bsmdeMap*>(DB->Find("bsmdeMap"));
-    }
-    if((version = mChain->GetValidity(mSmdpTTable,NULL)) != mSmdpValidity) {
-        mSmdpValidity = version;
-        mSmdpTTable = static_cast<St_bsmdpMap*>(DB->Find("bsmdpMap"));
-    }
-}
-
 void StEmcMappingDb::SetDateTime(int date, int time) {
     if(mChain) {
         LOG_ERROR << "StEmcMappingDb::SetDateTime is illegal in a chain" << endm;

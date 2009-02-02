@@ -22,17 +22,17 @@
 class StVirtualEmcMappingDb
 {
 public:
-    virtual const bemcMap_st* bemc() const                              = 0;
-    virtual const bemcMap_st& bemc(int softId) const                    = 0;
+    virtual const bemcMap_st* bemcMap() const                           = 0;
+    virtual const bemcMap_st& bemcMap(int softId) const                 = 0;
     
-    virtual const bprsMap_st* bprs() const                              = 0;
-    virtual const bprsMap_st& bprs(int softId) const                    = 0;
+    virtual const bprsMap_st* bprsMap() const                           = 0;
+    virtual const bprsMap_st& bprsMap(int softId) const                 = 0;
     
-    virtual const bsmdeMap_st* bsmde() const                            = 0;
-    virtual const bsmdeMap_st& bsmde(int softId) const                  = 0;
+    virtual const bsmdeMap_st* bsmdeMap() const                         = 0;
+    virtual const bsmdeMap_st& bsmdeMap(int softId) const               = 0;
 
-    virtual const bsmdpMap_st* bsmdp() const                            = 0;
-    virtual const bsmdpMap_st& bsmdp(int softId) const                  = 0;
+    virtual const bsmdpMap_st* bsmdpMap() const                         = 0;
+    virtual const bsmdpMap_st& bsmdpMap(int softId) const               = 0;
     
     virtual int softIdFromMES(StDetectorId, int m, int e, int s) const  = 0;
     

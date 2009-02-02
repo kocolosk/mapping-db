@@ -175,25 +175,25 @@ void StEmcMappingDb::SetMaxEntryTime(int date, int time) {
 }
 
 // struct declaration auto-generated at $STAR/include/bemcMap.h
-const bemcMap_st* StEmcMappingDb::bemc() const {
+const bemcMap_st* StEmcMappingDb::bemcMap() const {
     maybe_reload(kBarrelEmcTowerId);
     return mBemcTTable->GetTable();
 }
 
 // struct declaration auto-generated at $STAR/include/bprsMap.h
-const bprsMap_st* StEmcMappingDb::bprs() const {
+const bprsMap_st* StEmcMappingDb::bprsMap() const {
     maybe_reload(kBarrelEmcPreShowerId);
     return mBprsTTable->GetTable();
 }
 
 // struct declaration auto-generated at $STAR/include/bsmdeMap.h
-const bsmdeMap_st* StEmcMappingDb::bsmde() const {
+const bsmdeMap_st* StEmcMappingDb::bsmdeMap() const {
     maybe_reload(kBarrelSmdEtaStripId);
     return mSmdeTTable->GetTable();
 }
 
 // struct declaration auto-generated at $STAR/include/bsmdpMap.h
-const bsmdpMap_st* StEmcMappingDb::bsmdp() const {
+const bsmdpMap_st* StEmcMappingDb::bsmdpMap() const {
     maybe_reload(kBarrelSmdPhiStripId);
     return mSmdpTTable->GetTable();
 }
@@ -219,7 +219,7 @@ StEmcMappingDb::softIdFromMES(StDetectorId det, int m, int e, int s) const {
 int 
 StEmcMappingDb::softIdFromCrate(StDetectorId det, int crate, int channel) const {
     if(det == kBarrelEmcTowerId) {
-        const bemcMap_st* map = bemc();
+        const bemcMap_st* map = bemcMap();
         if(!mCacheCrate[crate-1][channel]) {
             for(int i=0; i<4800; ++i) {
                 mCacheCrate[map[i].crate-1][map[i].crateChannel] = i+1;
@@ -241,7 +241,7 @@ StEmcMappingDb::softIdFromCrate(StDetectorId det, int crate, int channel) const 
 int 
 StEmcMappingDb::softIdFromDaqId(StDetectorId det, int daqID) const {
     if(det == kBarrelEmcTowerId) {
-        const bemcMap_st* map = bemc();
+        const bemcMap_st* map = bemcMap();
         if(!mCacheDaqId[daqID]) {
             for(int i=0; i<4800; ++i) {
                 mCacheDaqId[map[i].daqID] = i+1;
@@ -262,7 +262,7 @@ StEmcMappingDb::softIdFromDaqId(StDetectorId det, int daqID) const {
 int 
 StEmcMappingDb::softIdFromTDC(StDetectorId det, int TDC, int channel) const {
     if(det == kBarrelEmcTowerId) {
-        const bemcMap_st* map = bemc();
+        const bemcMap_st* map = bemcMap();
         if(!mCacheTDC[TDC][channel]) {
             for(int i=0; i<4800; ++i) {
                 mCacheTDC[map[i].TDC][map[i].crateChannel] = i+1;
@@ -286,7 +286,7 @@ StEmcMappingDb::softIdFromRDO(StDetectorId det, int rdo, int channel) const {
     short id;
     switch(det) {
         case kBarrelEmcPreShowerId:
-        const bprsMap_st* prs = bprs();
+        const bprsMap_st* prs = bprsMap();
         if(mCacheBprsRdo[rdo][channel] == -1) {
             for(int i=0; i<4800; i++) {
                 if(prs[i].rdo == rdo && prs[i].rdoChannel == channel) {
@@ -318,8 +318,8 @@ StEmcMappingDb::softIdFromRDO(StDetectorId det, int rdo, int channel) const {
         }
         
         case kBarrelSmdEtaStripId: case kBarrelSmdPhiStripId:
-        const bsmdeMap_st *smde = bsmde();
-        const bsmdpMap_st *smdp = bsmdp();
+        const bsmdeMap_st *smde = bsmdeMap();
+        const bsmdpMap_st *smdp = bsmdpMap();
         if(mCacheSmdRdo[rdo][channel] == -1) {
             for(int i=0; i<18000; i++) {
                 if(smde[i].rdo == rdo && smde[i].rdoChannel == channel) {

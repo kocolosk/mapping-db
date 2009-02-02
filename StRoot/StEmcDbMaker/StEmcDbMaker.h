@@ -7,7 +7,8 @@
  * @class StEmcDbMaker
  * @author Adam Kocoloski
  *
- * Caches BEMC mapping tables to optimize lookups by non-primary keys
+ * Helper for BEMC DB.  Among other things it provides optimized methods for 
+ * looking up mapping information by a non-primary key (e.g. rdo/channel).
  *****************************************************************************/
 
 #include "StMaker.h"
@@ -26,17 +27,17 @@ public:
     virtual Int_t Init();
     virtual Int_t Make();
     
-    const bemcMap_st* bemc() const;
-    const bemcMap_st& bemc(int softId) const;
+    const bemcMap_st* bemcMap() const;
+    const bemcMap_st& bemcMap(int softId) const;
     
-    const bprsMap_st* bprs() const;
-    const bprsMap_st& bprs(int softId) const;
+    const bprsMap_st* bprsMap() const;
+    const bprsMap_st& bprsMap(int softId) const;
     
-    const bsmdeMap_st* bsmde() const;
-    const bsmdeMap_st& bsmde(int softId) const;
+    const bsmdeMap_st* bsmdeMap() const;
+    const bsmdeMap_st& bsmdeMap(int softId) const;
 
-    const bsmdpMap_st* bsmdp() const;
-    const bsmdpMap_st& bsmdp(int softId) const;
+    const bsmdpMap_st* bsmdpMap() const;
+    const bsmdpMap_st& bsmdpMap(int softId) const;
     
     int softIdFromMES(StDetectorId det, int m, int e, int s) const;
     
@@ -54,7 +55,7 @@ public:
     }
     
 private:
-    // DB tables provided by St_db_Maker -- prefer to use these
+    // DB tables provided by St_db_Maker
     St_bemcMap  *mBemcMap;
     St_bprsMap  *mBprsMap;
     St_bsmdeMap *mSmdeMap;
@@ -81,16 +82,16 @@ private:
 };
 
 inline const bemcMap_st& 
-StEmcDbMaker::bemc(int softId) const { return bemc()[softId-1]; }
+StEmcDbMaker::bemcMap(int softId) const { return bemcMap()[softId-1]; }
 
 inline const bprsMap_st& 
-StEmcDbMaker::bprs(int softId) const { return bprs()[softId-1]; }
+StEmcDbMaker::bprsMap(int softId) const { return bprsMap()[softId-1]; }
 
 inline const bsmdeMap_st& 
-StEmcDbMaker::bsmde(int softId) const { return bsmde()[softId-1]; }
+StEmcDbMaker::bsmdeMap(int softId) const { return bsmdeMap()[softId-1]; }
 
 inline const bsmdpMap_st& 
-StEmcDbMaker::bsmdp(int softId) const { return bsmdp()[softId-1]; }
+StEmcDbMaker::bsmdpMap(int softId) const { return bsmdpMap()[softId-1]; }
 
 #endif
 

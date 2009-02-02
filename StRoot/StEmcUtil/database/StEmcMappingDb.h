@@ -7,9 +7,9 @@
  * @class StEmcMappingDb
  * @author Adam Kocoloski
  *
- * Wrapper around b*Map tables in Calibrations_emc. Relies on St_db_Maker to 
- * choose the correct tables if the Maker is present, otherwise it calls 
- * StDbManager directly.
+ * Implements StVirtualEmcMappingDb interface without St_db_Maker requirement.
+ * This class will use St_db_Maker if it's present, but if you're in a chain 
+ * you should really be using StEmcDbMaker instead.
  *****************************************************************************/
 
 #include "TObject.h"
@@ -38,17 +38,17 @@ public:
     void SetFlavor(const char *flavor, const char *tablename=NULL);
     void SetMaxEntryTime(int date, int time);
     
-    const bemcMap_st* bemc() const;
-    const bemcMap_st& bemc(int softId) const;
+    const bemcMap_st* bemcMap() const;
+    const bemcMap_st& bemcMap(int softId) const;
     
-    const bprsMap_st* bprs() const;
-    const bprsMap_st& bprs(int softId) const;
+    const bprsMap_st* bprsMap() const;
+    const bprsMap_st& bprsMap(int softId) const;
     
-    const bsmdeMap_st* bsmde() const;
-    const bsmdeMap_st& bsmde(int softId) const;
+    const bsmdeMap_st* bsmdeMap() const;
+    const bsmdeMap_st& bsmdeMap(int softId) const;
 
-    const bsmdpMap_st* bsmdp() const;
-    const bsmdpMap_st& bsmdp(int softId) const;
+    const bsmdpMap_st* bsmdpMap() const;
+    const bsmdpMap_st& bsmdpMap(int softId) const;
     
     int softIdFromMES(StDetectorId det, int m, int e, int s) const;
     
@@ -109,16 +109,16 @@ private:
 };
 
 inline const bemcMap_st& 
-StEmcMappingDb::bemc(int softId) const { return bemc()[softId-1]; }
+StEmcMappingDb::bemcMap(int softId) const { return bemcMap()[softId-1]; }
 
 inline const bprsMap_st& 
-StEmcMappingDb::bprs(int softId) const { return bprs()[softId-1]; }
+StEmcMappingDb::bprsMap(int softId) const { return bprsMap()[softId-1]; }
 
 inline const bsmdeMap_st& 
-StEmcMappingDb::bsmde(int softId) const { return bsmde()[softId-1]; }
+StEmcMappingDb::bsmdeMap(int softId) const { return bsmdeMap()[softId-1]; }
 
 inline const bsmdpMap_st& 
-StEmcMappingDb::bsmdp(int softId) const { return bsmdp()[softId-1]; }
+StEmcMappingDb::bsmdpMap(int softId) const { return bsmdpMap()[softId-1]; }
 
 #endif
 

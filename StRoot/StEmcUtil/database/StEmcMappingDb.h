@@ -13,14 +13,9 @@
  *****************************************************************************/
 
 #include "TObject.h"
+#include "StVirtualEmcMappingDb.h"
+
 #include "TDatime.h"
-
-#include "StEvent/StEnumerations.h"
-
-#include "bemcMap.h"
-#include "bprsMap.h"
-#include "bsmdeMap.h"
-#include "bsmdpMap.h"
 
 class St_bemcMap;
 class St_bsmdeMap;
@@ -30,7 +25,7 @@ class St_bprsMap;
 class StDbTable;
 class StMaker;
 
-class StEmcMappingDb : public TObject 
+class StEmcMappingDb : public TObject, public StVirtualEmcMappingDb
 {
 public:
     StEmcMappingDb(int date=20330101, int time=0);

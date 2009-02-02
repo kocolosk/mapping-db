@@ -7,13 +7,22 @@
 #include <TFile.h>
 #endif
 #include "StMessMgr.h"
+#include "StMaker.h"
 
+#include "StVirtualEmcMappingDb.h"
 #include "StEmcMappingDb.h"
 
 ClassImp(StEmcDecoder)
 
 StEmcDecoder::StEmcDecoder(unsigned date, unsigned time, bool TowerMapBug) {
-    mapping = StEmcMappingDb::instance();
+    mapping = NULL;
+    if(StMaker::GetChain()) {
+        StMaker *mk = StMaker::GetChain()->GetMakerInheritsFrom("StEmcDbMaker");
+        mapping = dynamic_cast<StVirtualEmcMappingDb*>(mk);
+    }
+    if(!mapping) {
+        mapping = StEmcMappingDb::instance();
+    }
     
     mTowerMapBug = TowerMapBug; // unused
     
@@ -50,7 +59,8 @@ StEmcDecoder::StEmcDecoder(unsigned date, unsigned time, bool TowerMapBug) {
 StEmcDecoder::~StEmcDecoder() { }
 
 void StEmcDecoder::SetDateTime(unsigned int date, unsigned int time) {
-    mapping->SetDateTime(date, time);
+    StEmcMappingDb *m = dynamic_cast<StEmcMappingDb*>(mapping);
+    if(m) m->SetDateTime(date, time);
 }
 
 bool StEmcDecoder::GetFixTowerMapBug(void) const {

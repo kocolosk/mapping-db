@@ -1,5 +1,7 @@
 // $Id$
 
+using namespace std;
+
 #include "StEmcDbMaker.h"
 
 #include "TDatime.h"
@@ -9,13 +11,27 @@
 #include "tables/St_bprsMap_Table.h"
 #include "tables/St_bsmdeMap_Table.h"
 #include "tables/St_bsmdpMap_Table.h"
+#include "tables/St_emcCalib_Table.h"
+#include "tables/St_smdCalib_Table.h"
+#include "tables/St_emcPed_Table.h"
+#include "tables/St_smdPed_Table.h"
+#include "tables/St_emcStatus_Table.h"
+#include "tables/St_smdStatus_Table.h"
+#include "tables/St_emcGain_Table.h"
+#include "tables/St_smdGain_Table.h"
+#include "tables/St_emcTriggerPed_Table.h"
+#include "tables/St_emcTriggerStatus_Table.h"
+#include "tables/St_emcTriggerLUT_Table.h"
 
 ClassImp(StEmcDbMaker);
 
-StEmcDbMaker::StEmcDbMaker(const char *name) : 
-    StMaker(name), mBemcMap(NULL), mBprsMap(NULL), mSmdeMap(NULL),
-    mSmdpMap(NULL), mBemcVersion(-2), mBprsVersion(-2), mSmdeVersion(-2),
-    mSmdpVersion(-2)
+StEmcDbMaker::StEmcDbMaker(const char *name) : StMaker(name), 
+    mBemcMap(NULL), mBprsMap(NULL), mSmdeMap(NULL), mSmdpMap(NULL),
+    mBemcCalib(NULL), mBprsCalib(NULL), mSmdeCalib(NULL), mSmdpCalib(NULL),
+    mBemcPed(NULL), mBprsPed(NULL), mSmdePed(NULL), mSmdpPed(NULL),
+    mBemcStatus(NULL), mBprsStatus(NULL), mSmdeStatus(NULL), mSmdpStatus(NULL),
+    mBemcGain(NULL), mBprsGain(NULL), mSmdeGain(NULL), mSmdpGain(NULL),
+    mTriggerPed(NULL), mTriggerStatus(NULL), mTriggerLUT(NULL)
 {
     reset_bemc_cache();
     reset_bprs_cache();
@@ -34,14 +50,101 @@ Int_t StEmcDbMaker::Init() {
     else {
         LOG_ERROR << "could not find Calibrations/emc/map DB" << endm;
     }
+    
+    DB = GetInputDB("Calibrations/emc/y3bemc");
+    if(DB) {
+        mBemcCalib  = static_cast<St_emcCalib*> (DB->Find("bemcCalib"));
+        mBemcPed    = static_cast<St_emcPed*>   (DB->Find("bemcPed"));
+        mBemcStatus = static_cast<St_emcStatus*>(DB->Find("bemcStatus"));
+        mBemcGain   = static_cast<St_emcGain*>  (DB->Find("bemcGain"));
+    }
+    else {
+        LOG_ERROR << "could not find Calibrations/emc/y3bemc DB" << endm;        
+    }
+    
+    DB = GetInputDB("Calibrations/emc/y3bprs");
+    if(DB) {
+        mBprsCalib  = static_cast<St_emcCalib*> (DB->Find("bprsCalib"));
+        mBprsPed    = static_cast<St_emcPed*>   (DB->Find("bprsPed"));
+        mBprsStatus = static_cast<St_emcStatus*>(DB->Find("bprsStatus"));
+        mBprsGain   = static_cast<St_emcGain*>  (DB->Find("bprsGain"));
+    }
+    else {
+        LOG_ERROR << "could not find Calibrations/emc/y3bprs DB" << endm;        
+    }
+    
+    DB = GetInputDB("Calibrations/emc/y3bsmde");
+    if(DB) {
+        mSmdeCalib  = static_cast<St_smdCalib*> (DB->Find("bsmdeCalib"));
+        mSmdePed    = static_cast<St_smdPed*>   (DB->Find("bsmdePed"));
+        mSmdeStatus = static_cast<St_smdStatus*>(DB->Find("bsmdeStatus"));
+        mSmdeGain   = static_cast<St_smdGain*>  (DB->Find("bsmdeGain"));
+    }
+    else {
+        LOG_ERROR << "could not find Calibrations/emc/y3bsmde DB" << endm;        
+    }
+    
+    DB = GetInputDB("Calibrations/emc/y3bsmdp");
+    if(DB) {
+        mSmdpCalib  = static_cast<St_smdCalib*> (DB->Find("bsmdpCalib"));
+        mSmdpPed    = static_cast<St_smdPed*>   (DB->Find("bsmdpPed"));
+        mSmdpStatus = static_cast<St_smdStatus*>(DB->Find("bsmdpStatus"));
+        mSmdpGain   = static_cast<St_smdGain*>  (DB->Find("bsmdpGain"));
+    }
+    else {
+        LOG_ERROR << "could not find Calibrations/emc/y3smdp DB" << endm;        
+    }
+    
+    DB = GetInputDB("Calibrations/emc/trigger");
+    if(DB) {
+        mTriggerPed = 
+            static_cast<St_emcTriggerPed*>(DB->Find("bemcTriggerPed"));
+        mTriggerStatus = 
+            static_cast<St_emcTriggerStatus*>(DB->Find("bemcTriggerStatus"));
+        mTriggerLUT = 
+            static_cast<St_emcTriggerLUT*>(DB->Find("bemcTriggerLUT"));
+    }
+    else {
+        LOG_ERROR << "could not find Calibrations/emc/trigger DB" << endm;        
+    }
+    
+    mTableVec.push_back(mBemcCalib);
+    mTableVec.push_back(mBemcPed);
+    mTableVec.push_back(mBemcStatus);
+    mTableVec.push_back(mBemcGain);
+    
+    mTableVec.push_back(mBprsCalib);
+    mTableVec.push_back(mBprsPed);
+    mTableVec.push_back(mBprsStatus);
+    mTableVec.push_back(mBprsGain);
+    
+    mTableVec.push_back(mSmdeCalib);
+    mTableVec.push_back(mSmdePed);
+    mTableVec.push_back(mSmdeStatus);
+    mTableVec.push_back(mSmdeGain);
+    
+    mTableVec.push_back(mSmdpCalib);
+    mTableVec.push_back(mSmdpPed);
+    mTableVec.push_back(mSmdpStatus);
+    mTableVec.push_back(mSmdpGain);
+    
+    mTableVec.push_back(mTriggerPed);
+    mTableVec.push_back(mTriggerStatus);
+    mTableVec.push_back(mTriggerLUT);
+    
     return StMaker::Init();
 }
 
 Int_t StEmcDbMaker::Make() {
-    if(new_version(mBemcMap, mBemcVersion)) reset_bemc_cache();
-    if(new_version(mBprsMap, mBprsVersion)) reset_bprs_cache();
-    if(new_version(mSmdeMap, mSmdeVersion)) reset_smde_cache();
-    if(new_version(mSmdpMap, mSmdpVersion)) reset_smdp_cache();
+    if(new_version(mBemcMap)) reset_bemc_cache();
+    if(new_version(mBprsMap)) reset_bprs_cache();
+    if(new_version(mSmdeMap)) reset_smde_cache();
+    if(new_version(mSmdpMap)) reset_smdp_cache();
+    
+    vector<TTable*>::const_iterator it;
+    for(it = mTableVec.begin(); it != mTableVec.end(); it++) {
+        if(*it) new_version(*it);
+    }
     
     return kStOk;
 }
@@ -188,14 +291,16 @@ StEmcDbMaker::softIdFromRDO(StDetectorId det, int rdo, int channel) const {
     return 0;
 }
 
-bool StEmcDbMaker::new_version(const TTable *table, Int_t &version) const {
+bool StEmcDbMaker::new_version(const TTable *table) const {
+    Int_t& version = mVersion[table->GetName()];
     TDatime ts[2];
     Int_t new_version = GetValidity(table, ts);
+    string begin(ts[0].AsSQLString()); // copy result from static buffer
     
     if(version != new_version) {
         version = new_version;
-        LOG_INFO << Form("loaded new %-20s table with validity %s - %s", 
-            table->GetName(), ts[0].AsSQLString(), ts[1].AsSQLString()) << endm;
+        LOG_INFO << Form("new %-17s table with validity %s - %s", 
+            table->GetName(), begin.c_str(), ts[1].AsSQLString()) << endm;
         return true;
     }
     return false;

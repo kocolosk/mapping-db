@@ -11,6 +11,10 @@
  * looking up mapping information by a non-primary key (e.g. rdo/channel).
  *****************************************************************************/
 
+#include <vector>
+#include <map>
+#include <string>
+
 #include "StMaker.h"
 #include "StEmcUtil/database/StVirtualEmcMappingDb.h"
 
@@ -18,6 +22,20 @@ class St_bemcMap;
 class St_bsmdeMap;
 class St_bsmdpMap;
 class St_bprsMap;
+
+class St_emcCalib;
+class St_emcPed;
+class St_emcStatus;
+class St_emcGain;
+
+class St_smdCalib;
+class St_smdPed;
+class St_smdStatus;
+class St_smdGain;
+
+class St_emcTriggerPed;
+class St_emcTriggerStatus;
+class St_emcTriggerLUT;
 
 class StEmcDbMaker : public StMaker, public StVirtualEmcMappingDb
 {
@@ -61,11 +79,34 @@ private:
     St_bsmdeMap *mSmdeMap;
     St_bsmdpMap *mSmdpMap;
     
+    St_emcCalib *mBemcCalib;
+    St_emcCalib *mBprsCalib;
+    St_smdCalib *mSmdeCalib;
+    St_smdCalib *mSmdpCalib;
+    
+    St_emcPed *mBemcPed;
+    St_emcPed *mBprsPed;
+    St_smdPed *mSmdePed;
+    St_smdPed *mSmdpPed;
+    
+    St_emcStatus *mBemcStatus;
+    St_emcStatus *mBprsStatus;
+    St_smdStatus *mSmdeStatus;
+    St_smdStatus *mSmdpStatus;
+    
+    St_emcGain *mBemcGain;
+    St_emcGain *mBprsGain;
+    St_smdGain *mSmdeGain;
+    St_smdGain *mSmdpGain;
+    
+    St_emcTriggerPed    *mTriggerPed;
+    St_emcTriggerStatus *mTriggerStatus;
+    St_emcTriggerLUT    *mTriggerLUT;
+    
     // version info from StMaker::GetValidity -- used to expire caches
-    Int_t mBemcVersion;
-    Int_t mBprsVersion;
-    Int_t mSmdeVersion;
-    Int_t mSmdpVersion;
+    mutable std::map<std::string, Int_t> mVersion;
+    
+    std::vector<TTable*> mTableVec;
     
     mutable short mCacheCrate[30][160];
     mutable short mCacheDaqId[4800];
@@ -73,7 +114,7 @@ private:
     mutable short mCacheBprsRdo[4][4800];
     mutable short mCacheSmdRdo[8][4800];
     
-    bool new_version(const TTable *table, Int_t &version) const;
+    bool new_version(const TTable *table) const;
     void reset_bemc_cache() const;
     void reset_bprs_cache() const;
     void reset_smde_cache() const;

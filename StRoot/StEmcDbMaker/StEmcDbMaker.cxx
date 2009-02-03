@@ -2,6 +2,10 @@
 
 #include "StEmcDbMaker.h"
 
+using namespace std;
+
+#include <string>
+
 #include "TDatime.h"
 
 #include "StMessMgr.h"
@@ -191,11 +195,12 @@ StEmcDbMaker::softIdFromRDO(StDetectorId det, int rdo, int channel) const {
 bool StEmcDbMaker::new_version(const TTable *table, Int_t &version) const {
     TDatime ts[2];
     Int_t new_version = GetValidity(table, ts);
+    string begin(ts[0].AsSQLString()); // copy result from static buffer
     
     if(version != new_version) {
         version = new_version;
         LOG_INFO << Form("loaded new %-20s table with validity %s - %s", 
-            table->GetName(), ts[0].AsSQLString(), ts[1].AsSQLString()) << endm;
+            table->GetName(), begin.c_str(), ts[1].AsSQLString()) << endm;
         return true;
     }
     return false;

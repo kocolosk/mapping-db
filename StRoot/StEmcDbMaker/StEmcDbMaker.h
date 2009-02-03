@@ -73,6 +73,7 @@ private:
     mutable short mCacheBprsRdo[4][4800];
     mutable short mCacheSmdRdo[8][4800];
     
+    bool new_version(const TTable *table, Int_t &version) const;
     void reset_bemc_cache() const;
     void reset_bprs_cache() const;
     void reset_smde_cache() const;

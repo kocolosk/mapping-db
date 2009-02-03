@@ -38,36 +38,10 @@ Int_t StEmcDbMaker::Init() {
 }
 
 Int_t StEmcDbMaker::Make() {
-    Int_t version;
-    TDatime ts;
-
-    if((version = GetValidity(mBemcMap,&ts)) != mBemcVersion) {
-        mBemcVersion = version;
-        reset_bemc_cache();
-        LOG_INFO << "loaded new bemcMap  with beginTime " << ts.AsSQLString() 
-            << endm;
-    }
-    
-    if((version = GetValidity(mBprsMap,&ts)) != mBprsVersion) {
-        mBprsVersion = version;
-        reset_bprs_cache();
-        LOG_INFO << "loaded new bprsMap  with beginTime " << ts.AsSQLString() 
-            << endm;
-    }
-    
-    if((version = GetValidity(mSmdeMap,&ts)) != mSmdeVersion) {
-        mSmdeVersion = version;
-        reset_smde_cache();
-        LOG_INFO << "loaded new bsmdeMap with beginTime " << ts.AsSQLString() 
-            << endm;
-    }
-    
-    if((version = GetValidity(mSmdpMap,&ts)) != mSmdpVersion) {
-        mSmdpVersion = version;
-        reset_smdp_cache();
-        LOG_INFO << "loaded new bsmdpMap with beginTime " << ts.AsSQLString() 
-            << endm;
-    }
+    if(new_version(mBemcMap, mBemcVersion)) reset_bemc_cache();
+    if(new_version(mBprsMap, mBprsVersion)) reset_bprs_cache();
+    if(new_version(mSmdeMap, mSmdeVersion)) reset_smde_cache();
+    if(new_version(mSmdpMap, mSmdpVersion)) reset_smdp_cache();
     
     return kStOk;
 }
@@ -212,6 +186,19 @@ StEmcDbMaker::softIdFromRDO(StDetectorId det, int rdo, int channel) const {
         default: break;
     }
     return 0;
+}
+
+bool StEmcDbMaker::new_version(const TTable *table, Int_t &version) const {
+    TDatime ts[2];
+    Int_t new_version = GetValidity(table, ts);
+    
+    if(version != new_version) {
+        version = new_version;
+        LOG_INFO << Form("loaded new %-20s table with validity %s - %s", 
+            table->GetName(), ts[0].AsSQLString(), ts[1].AsSQLString()) << endm;
+        return true;
+    }
+    return false;
 }
 
 void StEmcDbMaker::reset_bemc_cache() const {
